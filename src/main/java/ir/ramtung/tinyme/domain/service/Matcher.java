@@ -44,7 +44,7 @@ public class Matcher {
                 newOrder.makeQuantityZero();
             }
         }
-        if (!newOrder.hasEnoughExecutions()){
+        if (newOrder.getStatus() == OrderStatus.NEW && !newOrder.hasEnoughExecutions()){
             rollbackTrades(newOrder, trades);
             return MatchResult.notEnoughMatches();
         }

@@ -77,7 +77,7 @@ public class Security {
             return MatchResult.executed(null, List.of());
         }
         else
-            order.markAsNew();
+            order.markAsUpdating();
 
         orderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
         MatchResult matchResult = matcher.execute(order);

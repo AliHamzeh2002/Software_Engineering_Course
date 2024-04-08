@@ -46,14 +46,14 @@ public class IcebergOrder extends Order {
 
     @Override
     public int getQuantity() {
-        if (status == OrderStatus.NEW)
+        if (status == OrderStatus.NEW || status == OrderStatus.UPDATING)
             return super.getQuantity();
         return displayedQuantity;
     }
 
     @Override
     public void decreaseQuantity(int amount) {
-        if (status == OrderStatus.NEW) {
+        if (status == OrderStatus.NEW || status == OrderStatus.UPDATING) {
             super.decreaseQuantity(amount);
             return;
         }
