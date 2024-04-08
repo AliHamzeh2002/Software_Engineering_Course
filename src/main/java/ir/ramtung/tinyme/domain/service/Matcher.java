@@ -28,7 +28,6 @@ public class Matcher {
             }
             trade.increaseSellersCredit();
             trades.add(trade);
-            newOrder.increaseExecutionQuantity();
 
             if (newOrder.getQuantity() >= matchingOrder.getQuantity()) {
                 newOrder.decreaseQuantity(matchingOrder.getQuantity());

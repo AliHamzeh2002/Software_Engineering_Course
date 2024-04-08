@@ -94,6 +94,8 @@ public class Order {
         if (amount > quantity)
             throw new IllegalArgumentException();
         quantity -= amount;
+        if (status == OrderStatus.NEW)
+            executionQuantity += amount;
     }
 
     public void makeQuantityZero() {
