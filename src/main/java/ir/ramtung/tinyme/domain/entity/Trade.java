@@ -31,6 +31,11 @@ public class Trade {
         }
     }
 
+    public void rollback(){
+        sell.getBroker().decreaseCreditBy(getTradedValue());
+        buy.getBroker().increaseCreditBy(getTradedValue());
+    }
+
     public long getTradedValue() {
         return (long) price * quantity;
     }
@@ -45,6 +50,12 @@ public class Trade {
 
     public boolean buyerHasEnoughCredit() {
         return buy.getBroker().hasEnoughCredit(getTradedValue());
+    }
+
+    public Order getOrder(Side side){
+        if (side == Side.BUY)
+            return buy;
+        return sell;
     }
 
 }
