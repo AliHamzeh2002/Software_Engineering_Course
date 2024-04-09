@@ -190,5 +190,24 @@ class SecurityTest {
         assertThat(result.remainder().getQuantity()).isZero();
     }
 
+    @Test
+    void update_order_must_not_change_minimum_execution_quantity(){
+        security = Security.builder().isin("TEST").build();
+        EnterOrderRq updateOrderReq = EnterOrderRq.createUpdateOrderRq(2, security.getIsin(), 1, LocalDateTime.now(), BUY, 304, 15800, 0, 0, 0,10);
+
+        assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> security.updateOrder(updateOrderReq, matcher));
+    }
+
+    @Test
+    void updated_sell_order_ignores_minimum_execution_quantity(){
+        Order order = new Order(100, security, Side.BUY, 1000, 15500, broker, shareholder, 500);
+        security.getOrderBook().enqueue(order);
+        EnterOrderRq updateOrderReq = EnterOrderRq.createUpdateOrderRq(1, security.getIsin(), 100, LocalDateTime.now(), Side.BUY, 1000, 15400, 1, shareholder.getShareholderId(), 0, 500);
+        assertThatNoException().isThrownBy(() -> {
+                final MatchResult result = security.updateOrder(updateOrderReq, matcher);
+                assertThat(result.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        });
+    }
+
 
 }
