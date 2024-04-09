@@ -31,9 +31,10 @@ public class Trade {
         }
     }
 
-    public void rollback(){
+    public void rollback(Side newOrderSide){
         sell.getBroker().decreaseCreditBy(getTradedValue());
-        buy.getBroker().increaseCreditBy(getTradedValue());
+        if (newOrderSide == Side.BUY)
+            buy.getBroker().increaseCreditBy(getTradedValue());
     }
 
     public long getTradedValue() {

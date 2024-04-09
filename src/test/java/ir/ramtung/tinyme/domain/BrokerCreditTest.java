@@ -102,6 +102,14 @@ public class BrokerCreditTest {
     }
 
     @Test
+    void new_sell_order_is_rolled_back_during_matching() {
+        EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.SELL, 300, 1700, 2, 0, 0,250);
+        security.newOrder(enterOrderRq, broker2, shareholder, matcher);
+        assertThat(broker2.getCredit()).isEqualTo(BROKER2_INIT_CREDIT);
+        assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT);
+    }
+
+    @Test
     void new_buy_order_is_rolled_back_after_matching() {
         Broker broker3 = Broker.builder().brokerId(3).credit(100 * 3000 + 50 * 3500 + 20 * 4000).build();
         EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 180, 4000, 3, 0, 0,0);

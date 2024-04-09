@@ -17,7 +17,7 @@ public class Matcher {
             if (matchingOrder == null)
                 break;
 
-            Trade trade = new Trade(newOrder.getSecurity(), matchingOrder.getPrice(), Math.min(newOrder.getQuantity(), matchingOrder.getQuantity()), newOrder.snapshot(), matchingOrder.snapshot());
+            Trade trade = new Trade(newOrder.getSecurity(), matchingOrder.getPrice(), Math.min(newOrder.getQuantity(), matchingOrder.getQuantity()), newOrder, matchingOrder);
             if (newOrder.getSide() == Side.BUY) {
                 if (trade.buyerHasEnoughCredit())
                     trade.decreaseBuyersCredit();
@@ -51,7 +51,7 @@ public class Matcher {
     }
 
     private void rollbackTrades(Order newOrder, LinkedList<Trade> trades) {
-        trades.forEach(Trade::rollback);
+        trades.forEach(trade -> trade.rollback(newOrder.getSide()));
 
         ListIterator<Trade> it = trades.listIterator(trades.size());
         while (it.hasPrevious()) {
@@ -62,7 +62,7 @@ public class Matcher {
 
     public MatchResult execute(Order order) {
         MatchResult result = match(order);
-        if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT)
+        if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY)
             return result;
 
         if (result.remainder().getQuantity() > 0) {
