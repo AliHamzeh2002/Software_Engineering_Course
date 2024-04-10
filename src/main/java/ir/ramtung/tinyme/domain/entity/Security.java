@@ -10,6 +10,8 @@ import lombok.Getter;
 
 import java.util.List;
 
+import static ir.ramtung.tinyme.messaging.Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER;
+
 @Getter
 @Builder
 public class Security {
@@ -54,7 +56,7 @@ public class Security {
         if ((order instanceof IcebergOrder) && updateOrderRq.getPeakSize() == 0)
             throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
         if (!(order instanceof IcebergOrder) && updateOrderRq.getPeakSize() != 0)
-            throw new InvalidRequestException(Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER);
+            throw new InvalidRequestException(CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER);
         if (order.minimumExecutionQuantity != updateOrderRq.getMinimumExecutionQuantity())
             throw new InvalidRequestException(Message.CANNOT_CHANGE_MINIMUM_EXECUTION_QUANTITY);
 

@@ -560,6 +560,16 @@ public class OrderHandlerTest {
         assertThat(shareholder.hasEnoughPositionsOn(security, 500)).isTrue();
     }
 
+    @Test
+    void new_order_does_not_satisfy_minimum_execution_quantity(){
+        Order matchingBuyOrder = new Order(100, security, Side.BUY, 100, 15500, broker1, shareholder, 0);
+        security.getOrderBook().enqueue(matchingBuyOrder);
+
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 200));
+        verify(eventPublisher).publish(new OrderRejectedEvent(1, 200, List.of(Message.HAS_NOT_ENOUGH_EXECUTION_QUANTITY)));
+    }
+
+
 
 
 }
