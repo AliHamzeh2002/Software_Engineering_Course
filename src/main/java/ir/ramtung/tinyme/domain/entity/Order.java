@@ -132,10 +132,6 @@ public class Order {
 
     public int getTotalQuantity() { return quantity; }
 
-    public void increaseExecutionQuantity(){
-        executionQuantity++;
-    }
-
     public boolean hasEnoughExecutions(){
         return executionQuantity >= minimumExecutionQuantity;
     }
