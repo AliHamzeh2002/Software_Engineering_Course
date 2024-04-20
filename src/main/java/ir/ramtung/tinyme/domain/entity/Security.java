@@ -7,6 +7,7 @@ import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.Message;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ import static ir.ramtung.tinyme.messaging.Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A
 @Builder
 public class Security {
     private String isin;
-
+    @Setter
     @Builder.Default
     private int lastTradePrice = 0;
     @Builder.Default
@@ -25,7 +26,7 @@ public class Security {
     private int lotSize = 1;
     @Builder.Default
     private OrderBook orderBook = new OrderBook();
-
+    @Builder.Default
     private InactiveOrderBook inactiveOrderBook = new InactiveOrderBook();
 
     public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
@@ -124,7 +125,5 @@ public class Security {
         return matchResult;
     }
 
-    public void setLastTradePrice(int lastTradePrice){
-        this.lastTradePrice = lastTradePrice;
-    }
+
 }
