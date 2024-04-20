@@ -18,5 +18,6 @@ public class Message {
     public static final String HAS_NOT_ENOUGH_EXECUTION_QUANTITY = "Has not enough execution quantity";
     public static final String STOP_LIMIT_ORDER_CANNOT_BE_ICEBERG = "Stop limit order cannot be iceberg";
     public static final String CANNOT_SPECIFY_MINIMUM_EXECUTION_QUANTITY_FOR_A_STOP_LIMIT_ORDER = "Cannot specify minimum execution quantity for a stop limit order";
-
+    public static final String CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER = "Cannot specify stop price for a non-stop limit order";
+    public static final String CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER = "Cannot specify stop price for activated order";
 }

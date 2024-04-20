@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -48,6 +49,12 @@ public class StopLimitOrder extends Order {
         } else {
             return stopPrice > order.getStopPrice();
         }
+    }
+
+    @Override
+    public void updateFromRequest(EnterOrderRq updateOrderRq) {
+        super.updateFromRequest(updateOrderRq);
+        this.stopPrice = updateOrderRq.getStopPrice();
     }
 
 }

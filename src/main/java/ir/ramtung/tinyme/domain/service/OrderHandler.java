@@ -86,11 +86,11 @@ public class OrderHandler {
             haveActivatedOrder = false;
             while (inactiveOrderBook.isFirstOrderActive(Side.SELL)) {
                 haveActivatedOrder = true;
-                handleActivatedOrder(inactiveOrderBook.popFirstOrder(Side.SELL), enterOrderRq);
+                handleActivatedOrder(inactiveOrderBook.dequeue(Side.SELL), enterOrderRq);
             }
             while (inactiveOrderBook.isFirstOrderActive(Side.BUY)) {
                 haveActivatedOrder = true;
-                handleActivatedOrder(inactiveOrderBook.popFirstOrder(Side.BUY), enterOrderRq);
+                handleActivatedOrder(inactiveOrderBook.dequeue(Side.BUY), enterOrderRq);
             }
         }
     }

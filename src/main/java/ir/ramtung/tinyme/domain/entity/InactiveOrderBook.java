@@ -59,7 +59,7 @@ public class InactiveOrderBook {
         return !queue.isEmpty() && queue.getFirst().isActive();
     }
 
-    public StopLimitOrder popFirstOrder(Side side) {
+    public StopLimitOrder dequeue(Side side) {
         var queue = getQueue(side);
         return queue.pollFirst();
     }
