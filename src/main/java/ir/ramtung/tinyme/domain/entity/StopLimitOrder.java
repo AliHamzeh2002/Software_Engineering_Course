@@ -29,19 +29,12 @@ public class StopLimitOrder extends Order {
     }
 
 
-    public boolean isActive(int lastTradePrice){
+    public boolean isActive(){
+        int lastTradePrice = security.getLastTradePrice();
         if (this.getSide() == Side.BUY) {
             return stopPrice <= lastTradePrice;
         } else {
             return stopPrice >= lastTradePrice;
-        }
-    }
-
-    public boolean isInactive(int lastTradePrice){
-        if (this.getSide() == Side.BUY) {
-            return stopPrice >= lastTradePrice;
-        } else {
-            return stopPrice <= lastTradePrice;
         }
     }
 

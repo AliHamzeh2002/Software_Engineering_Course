@@ -65,10 +65,9 @@ public class Matcher {
     public MatchResult execute(Order order) {
 
         if(order instanceof StopLimitOrder stopLimitOrder){
-
-            if(stopLimitOrder.isInactive(stopLimitOrder.getSecurity().getLastTradePrice())){
+            if(!stopLimitOrder.isActive()){
                 if(stopLimitOrder.getSide() == Side.BUY) {
-                    if (stopLimitOrder.getBroker().hasEnoughCredit(stopLimitOrder.getValue()))
+                    if (!stopLimitOrder.getBroker().hasEnoughCredit(stopLimitOrder.getValue()))
                         return MatchResult.notEnoughCredit();
                     stopLimitOrder.getBroker().decreaseCreditBy(stopLimitOrder.getValue());
                 }

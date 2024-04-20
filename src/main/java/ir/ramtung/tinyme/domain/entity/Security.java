@@ -55,7 +55,7 @@ public class Security {
     }
 
     public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
-        inactiveOrderBook.removeByOrderId(stoplimitOrder.getOrderId());
+        inactiveOrderBook.removeByOrderId(stoplimitOrder.getSide(), stoplimitOrder.getOrderId());
         stoplimitOrder.markAsNew();
         return matcher.execute(stoplimitOrder);
     }

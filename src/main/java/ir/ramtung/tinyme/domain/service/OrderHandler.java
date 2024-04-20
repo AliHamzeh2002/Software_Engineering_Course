@@ -70,24 +70,36 @@ public class OrderHandler {
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
             if (!matchResult.trades().isEmpty()) {
                 eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+                handleActivations(security,enterOrderRq);
             }
-            handleActivation(security,enterOrderRq);
+
         } catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
         }
     }
 
 
-    public void handleActivation(Security security,EnterOrderRq enterOrderRq){
+    private void handleActivations(Security security, EnterOrderRq enterOrderRq){
         InactiveOrderBook  inactiveOrderBook = security.getInactiveOrderBook();
-        for(StopLimitOrder stoplimitOrder : inactiveOrderBook.getQueue()) {
-            if(stoplimitOrder.isInactive(stoplimitOrder.getSecurity().getLastTradePrice()))
-                continue;
-            eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(),stoplimitOrder.getOrderId()));
-            MatchResult matchResult = security.activateOrder(stoplimitOrder ,matcher);
-            if (!matchResult.trades().isEmpty()) {
-                eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(),stoplimitOrder.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+        boolean haveActivatedOrder = true;
+        while (haveActivatedOrder) {
+            haveActivatedOrder = false;
+            while (inactiveOrderBook.isFirstOrderActive(Side.SELL)) {
+                haveActivatedOrder = true;
+                handleActivatedOrder(inactiveOrderBook.popFirstOrder(Side.SELL), enterOrderRq);
             }
+            while (inactiveOrderBook.isFirstOrderActive(Side.BUY)) {
+                haveActivatedOrder = true;
+                handleActivatedOrder(inactiveOrderBook.popFirstOrder(Side.BUY), enterOrderRq);
+            }
+        }
+    }
+
+    private void handleActivatedOrder(StopLimitOrder activatedOrder, EnterOrderRq enterOrderRq){
+        eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId()));
+        MatchResult matchResult = activatedOrder.getSecurity().activateOrder(activatedOrder, matcher);
+        if (!matchResult.trades().isEmpty()) {
+            eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
         }
     }
 
