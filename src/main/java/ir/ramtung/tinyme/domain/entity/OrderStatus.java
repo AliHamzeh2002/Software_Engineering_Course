@@ -6,4 +6,7 @@ public enum OrderStatus {
     SNAPSHOT,
     UPDATING,
 
+    INACTIVE,
+
+
 }

@@ -8,11 +8,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="tinyme" />
+        <module name="Software_Engineering_Course" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="Software_Engineering_Course" options="-parameters" />
       <module name="tinyme" options="-parameters" />
     </option>
   </component>

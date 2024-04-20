@@ -8,6 +8,8 @@ import ir.ramtung.tinyme.messaging.Message;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 
 import static ir.ramtung.tinyme.messaging.Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER;
@@ -16,6 +18,9 @@ import static ir.ramtung.tinyme.messaging.Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A
 @Builder
 public class Security {
     private String isin;
+
+    @Builder.Default
+    private int lastTradePrice = 0;
     @Builder.Default
     private int tickSize = 1;
     @Builder.Default
@@ -23,21 +28,38 @@ public class Security {
     @Builder.Default
     private OrderBook orderBook = new OrderBook();
 
+    private InactiveOrderBook inactiveOrderBook = new InactiveOrderBook();
+
+
+
     public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
         if (enterOrderRq.getSide() == Side.SELL &&
                 !shareholder.hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(shareholder) + enterOrderRq.getQuantity()))
             return MatchResult.notEnoughPositions();
         Order order;
-        if (enterOrderRq.getPeakSize() == 0)
-            order = new Order(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
-                    enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getMinimumExecutionQuantity());
-        else
+
+        if (enterOrderRq.getPeakSize() != 0 && enterOrderRq.getStopPrice() == 0) {
             order = new IcebergOrder(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
                     enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder,
                     enterOrderRq.getEntryTime(), enterOrderRq.getPeakSize(), enterOrderRq.getMinimumExecutionQuantity());
+        }
+        else if (enterOrderRq.getPeakSize() == 0 && enterOrderRq.getStopPrice() != 0){
+            order = new StopLimitOrder(enterOrderRq.getOrderId(),this,enterOrderRq.getSide(),enterOrderRq.getQuantity(),
+                    enterOrderRq.getPrice(),broker,shareholder, enterOrderRq.getEntryTime(),
+                    enterOrderRq.getStopPrice());
+        }
+        else
+            order = new Order(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
+                    enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getMinimumExecutionQuantity());
 
         return matcher.execute(order);
+    }
+
+    public MatchResult activateOrder(StopLimitOrder stoplimitOrder , Matcher matcher){
+        inactiveOrderBook.removeByOrderId(stoplimitOrder.getOrderId());
+        stoplimitOrder.markAsNew();
+        return matcher.execute(stoplimitOrder);
     }
 
     public void deleteOrder(DeleteOrderRq deleteOrderRq) throws InvalidRequestException {
@@ -92,5 +114,9 @@ public class Security {
             }
         }
         return matchResult;
+    }
+
+    public void setLastTradePrice(int lastTradePrice){
+        this.lastTradePrice = lastTradePrice;
     }
 }

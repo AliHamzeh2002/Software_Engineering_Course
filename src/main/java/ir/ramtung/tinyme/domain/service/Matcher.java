@@ -60,9 +60,26 @@ public class Matcher {
         }
     }
 
+
+
     public MatchResult execute(Order order) {
+
+        if(order instanceof StopLimitOrder stopLimitOrder){
+
+            if(stopLimitOrder.isInactive(stopLimitOrder.getSecurity().getLastTradePrice())){
+                if(stopLimitOrder.getSide() == Side.BUY) {
+                    if (stopLimitOrder.getBroker().hasEnoughCredit(stopLimitOrder.getValue()))
+                        return MatchResult.notEnoughCredit();
+                    stopLimitOrder.getBroker().decreaseCreditBy(stopLimitOrder.getValue());
+                }
+                stopLimitOrder.getSecurity().getInactiveOrderBook().enqueue(stopLimitOrder);
+                return MatchResult.isInActive();
+            }
+        }
+
         MatchResult result = match(order);
-        if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY)
+
+        if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY )
             return result;
 
         if (result.remainder().getQuantity() > 0) {
@@ -80,6 +97,7 @@ public class Matcher {
                 trade.getBuy().getShareholder().incPosition(trade.getSecurity(), trade.getQuantity());
                 trade.getSell().getShareholder().decPosition(trade.getSecurity(), trade.getQuantity());
             }
+            order.getSecurity().setLastTradePrice(result.trades().getLast().getPrice());
         }
         return result;
     }

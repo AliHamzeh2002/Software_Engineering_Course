@@ -60,15 +60,34 @@ public class OrderHandler {
                 eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.HAS_NOT_ENOUGH_EXECUTION_QUANTITY)));
                 return;
             }
-            if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
+            if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER){
+                if(matchResult.outcome() == MatchingOutcome.EXECUTED && enterOrderRq.getStopPrice()!=0){
+                    eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+                }
                 eventPublisher.publish(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+            }
             else
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
             if (!matchResult.trades().isEmpty()) {
                 eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
             }
+            handleActivation(security,enterOrderRq);
         } catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
+        }
+    }
+
+
+    public void handleActivation(Security security,EnterOrderRq enterOrderRq){
+        InactiveOrderBook  inactiveOrderBook = security.getInactiveOrderBook();
+        for(StopLimitOrder stoplimitOrder : inactiveOrderBook.getQueue()) {
+            if(stoplimitOrder.isInactive(stoplimitOrder.getSecurity().getLastTradePrice()))
+                continue;
+            eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(),stoplimitOrder.getOrderId()));
+            MatchResult matchResult = security.activateOrder(stoplimitOrder ,matcher);
+            if (!matchResult.trades().isEmpty()) {
+                eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(),stoplimitOrder.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+            }
         }
     }
 
