@@ -15,7 +15,8 @@ public class Message {
     public static final String QUANTITY_NOT_MULTIPLE_OF_LOT_SIZE = "Quantity is not a multiple of security lot size";
     public static final String PRICE_NOT_MULTIPLE_OF_TICK_SIZE = "Price is not a multiple of security tick size";
     public static final String SELLER_HAS_NOT_ENOUGH_POSITIONS = "Seller has not enough positions";
-
     public static final String HAS_NOT_ENOUGH_EXECUTION_QUANTITY = "Has not enough execution quantity";
+    public static final String STOP_LIMIT_ORDER_CANNOT_BE_ICEBERG = "Stop limit order cannot be iceberg";
+    public static final String CANNOT_SPECIFY_MINIMUM_EXECUTION_QUANTITY_FOR_A_STOP_LIMIT_ORDER = "Cannot specify minimum execution quantity for a stop limit order";
 
 }

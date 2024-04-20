@@ -137,6 +137,10 @@ public class OrderHandler {
             errors.add(Message.UNKNOWN_SHAREHOLDER_ID);
         if (enterOrderRq.getPeakSize() < 0 || enterOrderRq.getPeakSize() >= enterOrderRq.getQuantity())
             errors.add(Message.INVALID_PEAK_SIZE);
+        if (enterOrderRq.getStopPrice() > 0 && enterOrderRq.getPeakSize() > 0)
+            errors.add(Message.STOP_LIMIT_ORDER_CANNOT_BE_ICEBERG);
+        if (enterOrderRq.getStopPrice() > 0 && enterOrderRq.getMinimumExecutionQuantity() > 0)
+            errors.add(Message.CANNOT_SPECIFY_MINIMUM_EXECUTION_QUANTITY_FOR_A_STOP_LIMIT_ORDER);
         if (!errors.isEmpty())
             throw new InvalidRequestException(errors);
     }
