@@ -30,8 +30,6 @@ public class Security {
 
     private InactiveOrderBook inactiveOrderBook = new InactiveOrderBook();
 
-
-
     public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
         if (enterOrderRq.getSide() == Side.SELL &&
                 !shareholder.hasEnoughPositionsOn(this,
@@ -56,7 +54,7 @@ public class Security {
         return matcher.execute(order);
     }
 
-    public MatchResult activateOrder(StopLimitOrder stoplimitOrder , Matcher matcher){
+    public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
         inactiveOrderBook.removeByOrderId(stoplimitOrder.getOrderId());
         stoplimitOrder.markAsNew();
         return matcher.execute(stoplimitOrder);

@@ -3,8 +3,6 @@ package ir.ramtung.tinyme.domain.entity;
 import lombok.Getter;
 
 import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
 
 @Getter
 public class InactiveOrderBook {
@@ -17,7 +15,7 @@ public class InactiveOrderBook {
     public void enqueue(StopLimitOrder order) {
 
         queue.addLast(order);
-        order.setAsInactive();
+        order.markAsInactive();
     }
 
     public boolean removeByOrderId(long orderId) {

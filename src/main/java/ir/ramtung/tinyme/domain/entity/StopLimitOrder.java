@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.domain.entity;
 
-import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -46,7 +45,7 @@ public class StopLimitOrder extends Order {
         }
     }
 
-    public void setAsInactive(){
+    public void markAsInactive(){
         this.status = OrderStatus.INACTIVE;
     }
 
