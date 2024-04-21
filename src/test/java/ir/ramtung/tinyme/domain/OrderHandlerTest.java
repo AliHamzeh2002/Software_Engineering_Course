@@ -603,6 +603,23 @@ public class OrderHandlerTest {
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
     }
 
+    @Test
+    void new_sell_stop_limit_order_is_activated(){
+        security.setLastTradePrice(5);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0, 10));
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
+        verify(eventPublisher).publish(new OrderActivatedEvent(1, 200));
+    }
+
+    @Test
+    void new_buy_stop_limit_order_is_activated(){
+        security.setLastTradePrice(30);
+        broker1.increaseCreditBy(100);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.BUY, 10, 10, 1, shareholder.getShareholderId(), 0, 0, 20));
+        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
+        verify(eventPublisher).publish(new OrderActivatedEvent(1, 200));
+    }
+
     void initialize_orders_for_stop_limit_tests(){
         orders = Arrays.asList(
                 new Order(1, security, Side.BUY, 200, 2000, broker1, shareholder, 0),
