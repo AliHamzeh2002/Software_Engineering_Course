@@ -19,10 +19,10 @@ public class StopLimitOrder extends Order {
         this.stopPrice = stopPrice;
     }
 
-//    public StopLimitOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, OrderStatus status, int stopPrice) {
-//        super(orderId,security,side,quantity,price,broker,shareholder,0);
-//        this.stopPrice = stopPrice;
-//    }
+    public StopLimitOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, int stopPrice) {
+        super(orderId,security,side,quantity,price,broker,shareholder,0);
+        this.stopPrice = stopPrice;
+    }
 
     public StopLimitOrder(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, int stopPrice) {
         super(orderId, security, side, quantity, price, broker, shareholder, entryTime, OrderStatus.NEW,0);

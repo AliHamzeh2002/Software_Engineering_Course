@@ -209,5 +209,14 @@ class SecurityTest {
         });
     }
 
+    @Test
+    void deleting_inactive_order_works(){
+        StopLimitOrder stopLimitOrder = new StopLimitOrder(11, security, BUY, 100, 15500, broker, shareholder, 10);
+        security.getInactiveOrderBook().enqueue(stopLimitOrder);
+        DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), BUY, 11);
+        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThat(security.getInactiveOrderBook().getBuyQueue()).isEmpty();
+    }
+
 
 }
