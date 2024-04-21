@@ -66,10 +66,13 @@ public class OrderHandler {
                 }
                 eventPublisher.publish(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
             }
-            else
+            else {
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+            }
             if (!matchResult.trades().isEmpty()) {
                 eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
+            }
+            if (security.getLastTradePrice() != security.EMPTY_TRADE_PRICE){
                 handleActivations(security,enterOrderRq);
             }
 

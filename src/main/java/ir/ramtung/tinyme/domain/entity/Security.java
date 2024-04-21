@@ -16,10 +16,12 @@ import static ir.ramtung.tinyme.messaging.Message.CANNOT_SPECIFY_PEAK_SIZE_FOR_A
 @Getter
 @Builder
 public class Security {
+
+    public final static int EMPTY_TRADE_PRICE = 0;
     private String isin;
     @Setter
     @Builder.Default
-    private int lastTradePrice = 0;
+    private int lastTradePrice = EMPTY_TRADE_PRICE;
     @Builder.Default
     private int tickSize = 1;
     @Builder.Default
@@ -54,7 +56,6 @@ public class Security {
     }
 
     public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
-        inactiveOrderBook.removeByOrderId(stoplimitOrder.getSide(), stoplimitOrder.getOrderId());
         stoplimitOrder.markAsNew();
         return matcher.execute(stoplimitOrder);
     }
@@ -72,6 +73,10 @@ public class Security {
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
         if (order.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
+        if (order.getStatus() == OrderStatus.INACTIVE) {
+            inactiveOrderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
+            return;
+        }
         orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
     }
 
@@ -95,6 +100,13 @@ public class Security {
                 !order.getShareholder().hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(order.getShareholder()) - order.getQuantity() + updateOrderRq.getQuantity()))
             return MatchResult.notEnoughPositions();
+
+        if ((order instanceof StopLimitOrder stoplimitOrder) && order.getStatus() == OrderStatus.INACTIVE){
+            inactiveOrderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
+            order.updateFromRequest(updateOrderRq);
+            inactiveOrderBook.enqueue(stoplimitOrder);
+            return MatchResult.executed(null, List.of());
+        }
 
         boolean losesPriority = order.isQuantityIncreased(updateOrderRq.getQuantity())
                 || updateOrderRq.getPrice() != order.getPrice()
