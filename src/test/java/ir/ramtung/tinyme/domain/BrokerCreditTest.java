@@ -183,4 +183,42 @@ public class BrokerCreditTest {
         assertThat(broker3.getCredit()).isEqualTo(1000_000 - 80 * 3000);
     }
 
+    @Test
+    void new_inactive_buy_stop_limit_order_does_not_have_enough_credit(){
+        security.setLastTradePrice(100);
+        EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 80000, 10000, 1, 0, 0,0, 200);
+        MatchResult result = security.newOrder(enterOrderRq, broker1, shareholder, matcher);
+        assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_CREDIT);
+        assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT);
+    }
+
+    @Test
+    void new_inactive_buy_stop_limit_order_changes_credit(){
+        security.setLastTradePrice(100);
+        EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 800, 100, 1, 0, 0,0, 200);
+        MatchResult result = security.newOrder(enterOrderRq, broker1, shareholder, matcher);
+        assertThat(result.outcome()).isEqualTo(MatchingOutcome.IS_INACTIVE);
+        assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT - 800 * 100);
+    }
+
+    @Test
+    void new_inactive_sell_order_does_not_change_credit(){
+        security.setLastTradePrice(300);
+        EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.SELL, 80000, 10000, 1, 0, 0,0, 200);
+        MatchResult result = security.newOrder(enterOrderRq, broker1, shareholder, matcher);
+        assertThat(result.outcome()).isEqualTo(MatchingOutcome.IS_INACTIVE);
+        assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT);
+    }
+
+    @Test
+    void new_active_order_has_enough_credit(){
+        security.setLastTradePrice(400);
+        EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 80, 2000, 1, 0, 0,0, 200);
+        MatchResult result = security.newOrder(enterOrderRq, broker1, shareholder, matcher);
+        assertThat(result.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT - 2000 * 80);
+    }
+
+
+
 }

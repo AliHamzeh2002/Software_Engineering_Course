@@ -57,6 +57,8 @@ public class Security {
 
     public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
         stoplimitOrder.markAsNew();
+        if (stoplimitOrder.getSide() == Side.BUY)
+            stoplimitOrder.getBroker().increaseCreditBy(stoplimitOrder.getValue());
         return matcher.execute(stoplimitOrder);
     }
 

@@ -223,4 +223,11 @@ public class MatcherTest {
         }
     }
 
+    @Test
+    void last_trade_price_changes_after_match(){
+        Order order = new Order(11, security, Side.SELL, 600, 15480, broker, shareholder, 0);
+        MatchResult result = matcher.execute(order);
+        assertThat(security.getLastTradePrice()).isEqualTo(15500);
+    }
+
 }
