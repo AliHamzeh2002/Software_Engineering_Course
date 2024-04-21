@@ -722,5 +722,62 @@ public class OrderHandlerTest {
         assertThat(broker3.getCredit()).isEqualTo(1000_000 - (50*3500)-(50*4000));
     }
 
+    @Test
+    void inactive_sell_orders_activates_in_correct_order(){
+        initialize_orders_for_stop_limit_tests();
+        security.setLastTradePrice(5);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(5, "ABC", 5, LocalDateTime.now(), Side.BUY, 50, 4000, 1, shareholder.getShareholderId(), 0, 0, 15));
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(6, "ABC", 6, LocalDateTime.now(), Side.BUY, 30, 4000, 1, shareholder.getShareholderId(), 0, 0, 10));
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(7, "ABC", 7, LocalDateTime.now(), Side.BUY, 50, 4000, 1, shareholder.getShareholderId(), 0, 0, 10));
+        StopLimitOrder firstStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.BUY, 5);
+        StopLimitOrder secondStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.BUY, 6);
+        StopLimitOrder thirdStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.BUY, 7);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(8, "ABC", 8, LocalDateTime.now(), Side.BUY, 50, 4000, 1, shareholder.getShareholderId(), 0, 0, 0));
+
+        List<Trade> firstActivatedOrderTrades = List.of(
+                new Trade(security, 3000, 30, orders.get(2), secondStopLimitOrder)
+
+        );
+        List<Trade> secondActivatedOrderTrades = List.of(
+                new Trade(security, 3000, 20, orders.get(2), thirdStopLimitOrder),
+                new Trade(security, 3500, 30, orders.get(3), thirdStopLimitOrder)
+        );
+        List<Trade> thirdActiavtedOrderTrades = List.of(
+                new Trade(security, 3500, 20, orders.get(3), firstStopLimitOrder)
+        );
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 5, List.of(new TradeDTO(thirdActiavtedOrderTrades.get(0)))));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 6, List.of(new TradeDTO(firstActivatedOrderTrades.get(0)))));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 7, List.of(new TradeDTO(secondActivatedOrderTrades.get(0)), new TradeDTO(secondActivatedOrderTrades.get(1)))));
+
+    }
+
+    @Test
+    void inactive_buy_orders_activates_in_correct_order(){
+        initialize_orders_for_stop_limit_tests();
+        security.setLastTradePrice(5000);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(5, "ABC", 5, LocalDateTime.now(), Side.SELL, 100, 1000, 1, shareholder.getShareholderId(), 0, 0, 3000));
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(6, "ABC", 6, LocalDateTime.now(), Side.SELL, 80, 1200, 1, shareholder.getShareholderId(), 0, 0, 3200));
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(7, "ABC", 7, LocalDateTime.now(), Side.SELL, 70, 1300, 1, shareholder.getShareholderId(), 0, 0, 3200));
+        StopLimitOrder firstStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.SELL, 5);
+        StopLimitOrder secondStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.SELL, 6);
+        StopLimitOrder thirdStopLimitOrder = security.getInactiveOrderBook().findByOrderId(Side.SELL, 7);
+        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(8, "ABC", 8, LocalDateTime.now(), Side.SELL, 100, 2000, 2, shareholder.getShareholderId(), 0, 0, 0));
+
+        List<Trade> firstActivatedOrderTrades = List.of(
+                new Trade(security, 2000, 80, orders.get(0), secondStopLimitOrder)
+
+        );
+        List<Trade> secondActivatedOrderTrades = List.of(
+                new Trade(security, 2000, 20, orders.get(0), thirdStopLimitOrder),
+                new Trade(security, 1500, 50, orders.get(1), thirdStopLimitOrder)
+        );
+        List<Trade> thirdActivatedOrderTrades = List.of(
+                new Trade(security, 1500, 100, orders.get(1), firstStopLimitOrder)
+        );
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 5, List.of(new TradeDTO(thirdActivatedOrderTrades.get(0)))));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 6, List.of(new TradeDTO(firstActivatedOrderTrades.get(0)))));
+        verify(eventPublisher).publish(new OrderExecutedEvent(8, 7, List.of(new TradeDTO(secondActivatedOrderTrades.get(0)), new TradeDTO(secondActivatedOrderTrades.get(1)))));
+    }
+
 
 }
