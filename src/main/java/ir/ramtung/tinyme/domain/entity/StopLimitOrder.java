@@ -62,4 +62,13 @@ public class StopLimitOrder extends Order {
         this.stopPrice = updateOrderRq.getStopPrice();
     }
 
+    @Override
+    public boolean queuesBefore(Order order) {
+        if (order.getStatus() == OrderStatus.INACTIVE) {
+            return queuesBeforeInInactiveQueue((StopLimitOrder) order);
+        } else {
+            return super.queuesBefore(order);
+        }
+    }
+
 }

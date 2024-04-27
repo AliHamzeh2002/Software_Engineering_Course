@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.domain.service;
 
+import com.fasterxml.jackson.databind.deser.DataFormatReaders;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
@@ -81,28 +82,15 @@ public class OrderHandler {
         }
     }
 
-
     private void handleActivations(Security security, EnterOrderRq enterOrderRq){
-        InactiveOrderBook  inactiveOrderBook = security.getInactiveOrderBook();
-        boolean haveActivatedOrder = true;
-        while (haveActivatedOrder) {
-            haveActivatedOrder = false;
-            while (inactiveOrderBook.isFirstOrderActive(Side.SELL)) {
-                haveActivatedOrder = true;
-                handleActivatedOrder(inactiveOrderBook.dequeue(Side.SELL), enterOrderRq);
+        StopLimitOrder activatedOrder;
+        while ((activatedOrder = security.getFirstActivatedOrder()) != null){
+            MatchResult result = security.activateOrder(activatedOrder, matcher);
+            eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId()));
+            if (!result.trades().isEmpty()) {
+                eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId(), result.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
             }
-            while (inactiveOrderBook.isFirstOrderActive(Side.BUY)) {
-                haveActivatedOrder = true;
-                handleActivatedOrder(inactiveOrderBook.dequeue(Side.BUY), enterOrderRq);
-            }
-        }
-    }
 
-    private void handleActivatedOrder(StopLimitOrder activatedOrder, EnterOrderRq enterOrderRq){
-        eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId()));
-        MatchResult matchResult = activatedOrder.getSecurity().activateOrder(activatedOrder, matcher);
-        if (!matchResult.trades().isEmpty()) {
-            eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), activatedOrder.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
         }
     }
 

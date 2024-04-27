@@ -7,61 +7,26 @@ import java.util.List;
 import java.util.ListIterator;
 
 @Getter
-public class InactiveOrderBook {
-    private final LinkedList<StopLimitOrder> buyQueue;
-    private final LinkedList<StopLimitOrder> sellQueue;
-
-    public InactiveOrderBook() {
-        buyQueue = new LinkedList<>();
-        sellQueue = new LinkedList<>();
-    }
+public class InactiveOrderBook extends OrderBook{
 
     public void enqueue(StopLimitOrder order) {
-        List<StopLimitOrder> queue = getQueue(order.getSide());
-        ListIterator<StopLimitOrder> it = queue.listIterator();
-        while (it.hasNext()) {
-            if (order.queuesBeforeInInactiveQueue(it.next())) {
-                it.previous();
-                break;
-            }
-        }
+        super.enqueue(order);
         order.markAsInactive();
-        it.add(order);
-    }
-
-    private LinkedList<StopLimitOrder> getQueue(Side side) {
-        return side == Side.BUY ? buyQueue : sellQueue;
     }
 
     public StopLimitOrder findByOrderId(Side side, long orderId) {
-        var queue = getQueue(side);
-        for (StopLimitOrder order : queue) {
-            if (order.getOrderId() == orderId)
-                return order;
-        }
-        return null;
-    }
-
-    public boolean removeByOrderId(Side side, long orderId) {
-        var queue = getQueue(side);
-        var it = queue.listIterator();
-        while (it.hasNext()) {
-            if (it.next().getOrderId() == orderId) {
-                it.remove();
-                return true;
-            }
-        }
-        return false;
+        Order result = super.findByOrderId(side, orderId);
+        return result == null ? null : (StopLimitOrder) result;
     }
 
     public boolean isFirstOrderActive(Side side) {
         var queue = getQueue(side);
-        return !queue.isEmpty() && queue.getFirst().isActive();
+        return !queue.isEmpty() && ((StopLimitOrder)queue.getFirst()).isActive();
     }
 
     public StopLimitOrder dequeue(Side side) {
         var queue = getQueue(side);
-        return queue.pollFirst();
+        return (StopLimitOrder)queue.pollFirst();
     }
 
 }

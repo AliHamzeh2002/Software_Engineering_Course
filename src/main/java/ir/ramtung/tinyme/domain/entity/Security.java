@@ -55,6 +55,14 @@ public class Security {
         return matcher.execute(order);
     }
 
+    public StopLimitOrder getFirstActivatedOrder(){
+        if (inactiveOrderBook.isFirstOrderActive(Side.SELL))
+            return inactiveOrderBook.dequeue(Side.SELL);
+        if (inactiveOrderBook.isFirstOrderActive(Side.BUY))
+            return inactiveOrderBook.dequeue(Side.BUY);
+        return null;
+    }
+
     public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
         stoplimitOrder.markAsNew();
         if (stoplimitOrder.getSide() == Side.BUY)
