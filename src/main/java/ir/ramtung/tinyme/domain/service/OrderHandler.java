@@ -1,12 +1,12 @@
 package ir.ramtung.tinyme.domain.service;
 
-import com.fasterxml.jackson.databind.deser.DataFormatReaders;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.messaging.request.OrderEntryType;
@@ -25,9 +25,9 @@ public class OrderHandler {
     BrokerRepository brokerRepository;
     ShareholderRepository shareholderRepository;
     EventPublisher eventPublisher;
-    Matcher matcher;
+    ContinuousMatcher matcher;
 
-    public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, Matcher matcher) {
+    public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, ContinuousMatcher matcher) {
         this.securityRepository = securityRepository;
         this.brokerRepository = brokerRepository;
         this.shareholderRepository = shareholderRepository;
@@ -103,6 +103,12 @@ public class OrderHandler {
         } catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons()));
         }
+    }
+
+    public void handleChangeMatchingState(ChangeMatchingStateRq changeMatchingStateRq){
+        Security security = securityRepository.findSecurityByIsin(changeMatchingStateRq.getSecurityIsin());
+        security.changeMatchingState(changeMatchingStateRq.getTargetState());
+        eventPublisher.publish(new SecurityStateChangedEvent(changeMatchingStateRq.getEntryTime(), changeMatchingStateRq.getSecurityIsin(), changeMatchingStateRq.getTargetState()));
     }
 
     private void validateEnterOrderRq(EnterOrderRq enterOrderRq) throws InvalidRequestException {

@@ -3,8 +3,9 @@ package ir.ramtung.tinyme.domain.entity;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.ContinuousMatcher;
 import ir.ramtung.tinyme.messaging.Message;
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,8 +31,10 @@ public class Security {
     private OrderBook orderBook = new OrderBook();
     @Builder.Default
     private InactiveOrderBook inactiveOrderBook = new InactiveOrderBook();
+    @Builder.Default
+    private MatchingState matchingState = MatchingState.CONTINUOUS;
 
-    public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
+    public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, ContinuousMatcher matcher) {
         if (enterOrderRq.getSide() == Side.SELL &&
                 !shareholder.hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(shareholder) + enterOrderRq.getQuantity()))
@@ -55,6 +58,11 @@ public class Security {
         return matcher.execute(order);
     }
 
+    public void changeMatchingState(MatchingState newState){
+        matchingState = newState;
+        //TODO: handle open
+    }
+
     public StopLimitOrder getFirstActivatedOrder(){
         if (inactiveOrderBook.isFirstOrderActive(Side.SELL))
             return inactiveOrderBook.dequeue(Side.SELL);
@@ -63,7 +71,7 @@ public class Security {
         return null;
     }
 
-    public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
+    public MatchResult activateOrder(StopLimitOrder stoplimitOrder, ContinuousMatcher matcher){
         stoplimitOrder.markAsNew();
         if (stoplimitOrder.getSide() == Side.BUY)
             stoplimitOrder.getBroker().increaseCreditBy(stoplimitOrder.getValue());
@@ -90,7 +98,7 @@ public class Security {
         orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
     }
 
-    public MatchResult updateOrder(EnterOrderRq updateOrderRq, Matcher matcher) throws InvalidRequestException {
+    public MatchResult updateOrder(EnterOrderRq updateOrderRq, ContinuousMatcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
         if (order == null)
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);

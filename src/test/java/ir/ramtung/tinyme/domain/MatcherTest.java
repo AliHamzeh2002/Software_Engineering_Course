@@ -2,7 +2,7 @@ package ir.ramtung.tinyme.domain;
 
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
-import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.ContinuousMatcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static ir.ramtung.tinyme.domain.entity.Side.BUY;
-import static ir.ramtung.tinyme.domain.entity.Side.SELL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -29,7 +28,7 @@ public class MatcherTest {
     private OrderBook orderBook;
     private List<Order> orders;
     @Autowired
-    private Matcher matcher;
+    private ContinuousMatcher matcher;
 
     @BeforeEach
     void setupOrderBook() {

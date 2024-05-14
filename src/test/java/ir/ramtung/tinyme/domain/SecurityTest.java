@@ -2,7 +2,7 @@ package ir.ramtung.tinyme.domain;
 
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
-import ir.ramtung.tinyme.domain.service.Matcher;
+import ir.ramtung.tinyme.domain.service.ContinuousMatcher;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
@@ -28,7 +28,7 @@ class SecurityTest {
     private Shareholder shareholder;
     private List<Order> orders;
     @Autowired
-    Matcher matcher;
+    ContinuousMatcher matcher;
 
     @BeforeEach
     void setupOrderBook() {
