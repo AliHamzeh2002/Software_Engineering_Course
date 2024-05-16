@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @Import(MockedJMSTestConfig.class)
 @DirtiesContext
-public class MatcherTest {
+public class ContinuousMatcherTest {
     private Security security;
     private Broker broker;
     private Shareholder shareholder;

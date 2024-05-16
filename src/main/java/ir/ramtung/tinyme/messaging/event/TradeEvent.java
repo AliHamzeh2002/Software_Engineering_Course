@@ -1,6 +1,5 @@
 package ir.ramtung.tinyme.messaging.event;
 
-import ir.ramtung.tinyme.messaging.request.MatchingState;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,7 +11,12 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class SecurityStateChangedEvent extends Event {
+public class TradeEvent extends Event {
     private String securityIsin;
-    private MatchingState state;
+    private int price;
+    private int quantity;
+    private long buyId;
+    private long sellId;
 }
+
+

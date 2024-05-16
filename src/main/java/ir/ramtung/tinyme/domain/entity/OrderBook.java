@@ -29,7 +29,7 @@ public class OrderBook {
         it.add(order);
     }
 
-    protected LinkedList<Order> getQueue(Side side) {
+    public LinkedList<Order> getQueue(Side side) {
         return side == Side.BUY ? buyQueue : sellQueue;
     }
 
@@ -56,7 +56,7 @@ public class OrderBook {
 
     public Order matchWithFirst(Order newOrder) {
         var queue = getQueue(newOrder.getSide().opposite());
-        if (newOrder.matches(queue.getFirst()))
+        if (newOrder.matches(queue.getFirst().getPrice()))
             return queue.getFirst();
         else
             return null;
@@ -80,6 +80,8 @@ public class OrderBook {
     public void removeFirst(Side side) {
         getQueue(side).removeFirst();
     }
+
+    public void addFirst(Order order, Side side) { getQueue(side).addFirst(order); }
 
     public int totalSellQuantityByShareholder(Shareholder shareholder) {
         return sellQueue.stream()

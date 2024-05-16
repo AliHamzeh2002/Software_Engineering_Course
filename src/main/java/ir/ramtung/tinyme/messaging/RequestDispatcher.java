@@ -1,5 +1,6 @@
 package ir.ramtung.tinyme.messaging;
 
+import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
 import ir.ramtung.tinyme.domain.service.OrderHandler;
@@ -27,5 +28,11 @@ public class RequestDispatcher {
     public void receiveDeleteOrderRq(DeleteOrderRq deleteOrderRq) {
         log.info("Received message: " + deleteOrderRq);
         orderHandler.handleDeleteOrder(deleteOrderRq);
+    }
+
+    @JmsListener(destination = "${requestQueue}", selector = "_type='ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq'")
+    public void receiveChangeMatchingStateRq(ChangeMatchingStateRq changeMatchingStateRq) {
+        log.info("Received message: " + changeMatchingStateRq);
+        orderHandler.handleChangeMatchingState(changeMatchingStateRq);
     }
 }

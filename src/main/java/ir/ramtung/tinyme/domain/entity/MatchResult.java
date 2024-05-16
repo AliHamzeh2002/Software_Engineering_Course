@@ -1,16 +1,35 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import lombok.Builder;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+@Builder
 public final class MatchResult {
     private final MatchingOutcome outcome;
     private final Order remainder;
     private final LinkedList<Trade> trades;
+    @Builder.Default
+    private int openingPrice = 0;
+    @Builder.Default
+    private int tradableQuantity = 0;
 
     public static MatchResult executed(Order remainder, List<Trade> trades) {
         return new MatchResult(MatchingOutcome.EXECUTED, remainder, new LinkedList<>(trades));
+    }
+
+    public static MatchResult executed(Order remainder, List<Trade> trades, int openingPrice, int tradableQuantity) {
+        return new MatchResult(MatchingOutcome.EXECUTED, remainder, new LinkedList<>(trades), openingPrice, tradableQuantity);
+    }
+
+    public static MatchResult stopLimitOrderIsNotAllowed() {
+        return new MatchResult(MatchingOutcome.STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE, null, new LinkedList<>());
+    }
+
+    public static MatchResult minimumExecutionQuantityIsNotAllowed() {
+        return new MatchResult(MatchingOutcome.MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE, null, new LinkedList<>());
     }
 
     public static MatchResult notEnoughCredit() {
@@ -34,11 +53,27 @@ public final class MatchResult {
         this.trades = trades;
     }
 
+    private MatchResult(MatchingOutcome outcome, Order remainder, LinkedList<Trade> trades, int openingPrice, int tradableQuantity) {
+        this.outcome = outcome;
+        this.remainder = remainder;
+        this.trades = trades;
+        this.openingPrice = openingPrice;
+        this.tradableQuantity = tradableQuantity;
+    }
+
     public MatchingOutcome outcome() {
         return outcome;
     }
     public Order remainder() {
         return remainder;
+    }
+
+    public int openingPrice(){
+        return openingPrice;
+    }
+
+    public int tradableQuantity(){
+        return tradableQuantity;
     }
 
     public LinkedList<Trade> trades() {

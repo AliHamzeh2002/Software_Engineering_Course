@@ -48,6 +48,8 @@ public class StopLimitOrder extends Order {
         this.status = OrderStatus.INACTIVE;
     }
 
+    public void markAsActive(){this.status = OrderStatus.ACTIVE;}
+
     public boolean queuesBeforeInInactiveQueue(StopLimitOrder order) {
         if (order.getSide() == Side.BUY) {
             return stopPrice < order.getStopPrice();

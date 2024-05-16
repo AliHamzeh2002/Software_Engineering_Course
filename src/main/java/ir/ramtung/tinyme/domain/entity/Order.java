@@ -83,11 +83,11 @@ public class Order {
         return new Order(orderId, security, side, newQuantity, price, broker, shareholder, entryTime, OrderStatus.SNAPSHOT, minimumExecutionQuantity);
     }
 
-    public boolean matches(Order other) {
+    public boolean matches(int other_price) {
         if (side == Side.BUY)
-            return price >= other.price;
+            return price >= other_price;
         else
-            return price <= other.price;
+            return price <= other_price;
     }
 
     public void decreaseQuantity(int amount) {

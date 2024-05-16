@@ -20,4 +20,12 @@ public class Message {
     public static final String CANNOT_SPECIFY_MINIMUM_EXECUTION_QUANTITY_FOR_A_STOP_LIMIT_ORDER = "Cannot specify minimum execution quantity for a stop limit order";
     public static final String CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER = "Cannot specify stop price for a non-stop limit order";
     public static final String CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER = "Cannot specify stop price for activated order";
+    public static final String CANNOT_DELETE_INACTIVE_ORDER_IN_AUCTION = "Cannot delete inactive order in auction";
+
+    public static final String STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE = "Stop limit order is not allowed in auction state";
+    public static final String MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE = "Minimum execution quantity is not allowed in auction state";
+
+
+
+
 }

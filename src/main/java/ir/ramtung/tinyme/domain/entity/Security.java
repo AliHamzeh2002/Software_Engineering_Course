@@ -1,5 +1,7 @@
 package ir.ramtung.tinyme.domain.entity;
 
+import ir.ramtung.tinyme.domain.service.AuctionMatcher;
+import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
@@ -31,10 +33,11 @@ public class Security {
     private OrderBook orderBook = new OrderBook();
     @Builder.Default
     private InactiveOrderBook inactiveOrderBook = new InactiveOrderBook();
+    @Setter
     @Builder.Default
     private MatchingState matchingState = MatchingState.CONTINUOUS;
 
-    public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, ContinuousMatcher matcher) {
+    public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
         if (enterOrderRq.getSide() == Side.SELL &&
                 !shareholder.hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(shareholder) + enterOrderRq.getQuantity()))
@@ -58,9 +61,13 @@ public class Security {
         return matcher.execute(order);
     }
 
-    public void changeMatchingState(MatchingState newState){
+    public MatchResult changeMatchingState(MatchingState newState, AuctionMatcher auctionMatcher){
+        MatchResult matchResult = MatchResult.executed(null, List.of());
+        if (matchingState == MatchingState.AUCTION){
+            matchResult = auctionMatcher.reopen(orderBook, lastTradePrice);
+        }
         matchingState = newState;
-        //TODO: handle open
+        return matchResult;
     }
 
     public StopLimitOrder getFirstActivatedOrder(){
@@ -71,8 +78,8 @@ public class Security {
         return null;
     }
 
-    public MatchResult activateOrder(StopLimitOrder stoplimitOrder, ContinuousMatcher matcher){
-        stoplimitOrder.markAsNew();
+    public MatchResult activateOrder(StopLimitOrder stoplimitOrder, Matcher matcher){
+        stoplimitOrder.markAsActive();
         if (stoplimitOrder.getSide() == Side.BUY)
             stoplimitOrder.getBroker().increaseCreditBy(stoplimitOrder.getValue());
         return matcher.execute(stoplimitOrder);
@@ -89,6 +96,9 @@ public class Security {
         Order order = findByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
         if (order == null)
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
+        if (matchingState == MatchingState.AUCTION && order.getStatus() == OrderStatus.INACTIVE){
+            throw new InvalidRequestException(Message.CANNOT_DELETE_INACTIVE_ORDER_IN_AUCTION);
+        }
         if (order.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
         if (order.getStatus() == OrderStatus.INACTIVE) {
@@ -98,7 +108,7 @@ public class Security {
         orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
     }
 
-    public MatchResult updateOrder(EnterOrderRq updateOrderRq, ContinuousMatcher matcher) throws InvalidRequestException {
+    public MatchResult updateOrder(EnterOrderRq updateOrderRq, Matcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
         if (order == null)
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
@@ -110,8 +120,9 @@ public class Security {
             throw new InvalidRequestException(Message.CANNOT_CHANGE_MINIMUM_EXECUTION_QUANTITY);
         if (!(order instanceof StopLimitOrder) && updateOrderRq.getStopPrice() > 0)
             throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER);
-        if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (stopLimitOrder.getStopPrice() != 0))
+        if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (updateOrderRq.getStopPrice() != 0))
             throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER);
+
 
 
         if (updateOrderRq.getSide() == Side.SELL &&
@@ -122,8 +133,8 @@ public class Security {
         if ((order instanceof StopLimitOrder stoplimitOrder) && order.getStatus() == OrderStatus.INACTIVE){
             inactiveOrderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
             order.updateFromRequest(updateOrderRq);
-            inactiveOrderBook.enqueue(stoplimitOrder);
-            return MatchResult.executed(null, List.of());
+            MatchResult matchResult = matcher.execute(stoplimitOrder);
+            return matchResult;
         }
 
         boolean losesPriority = order.isQuantityIncreased(updateOrderRq.getQuantity())
