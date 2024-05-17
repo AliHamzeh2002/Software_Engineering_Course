@@ -87,6 +87,7 @@ public class OrderHandler {
 
             else {
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+                orderIdToRequestId.put(enterOrderRq.getOrderId(), enterOrderRq.getRequestId());
             }
             if (!matchResult.trades().isEmpty()) {
                 eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
@@ -118,7 +119,6 @@ public class OrderHandler {
             if (!result.trades().isEmpty()) {
                 eventPublisher.publish(new OrderExecutedEvent(requestId, activatedOrder.getOrderId(), result.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
             }
-
         }
     }
 
