@@ -123,8 +123,6 @@ public class Security {
         if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (updateOrderRq.getStopPrice() != 0))
             throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER);
 
-
-
         if (updateOrderRq.getSide() == Side.SELL &&
                 !order.getShareholder().hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(order.getShareholder()) - order.getQuantity() + updateOrderRq.getQuantity()))
@@ -133,6 +131,7 @@ public class Security {
         if ((order instanceof StopLimitOrder stoplimitOrder) && order.getStatus() == OrderStatus.INACTIVE){
             inactiveOrderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
             order.updateFromRequest(updateOrderRq);
+            order.markAsNew();
             MatchResult matchResult = matcher.execute(stoplimitOrder);
             return matchResult;
         }

@@ -73,12 +73,14 @@ public class OrderHandler {
                 return;
             }
 
+            if (matchResult.outcome() == MatchingOutcome.EXECUTED && enterOrderRq.getStopPrice()!=0){
+                eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+            }
+
             if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER){
-                if(matchResult.outcome() == MatchingOutcome.EXECUTED && enterOrderRq.getStopPrice()!=0){
-                    eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-                }
                 eventPublisher.publish(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
             }
+
             else {
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
             }

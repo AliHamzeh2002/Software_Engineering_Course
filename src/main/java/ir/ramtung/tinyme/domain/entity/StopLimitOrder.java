@@ -61,7 +61,8 @@ public class StopLimitOrder extends Order {
     @Override
     public void updateFromRequest(EnterOrderRq updateOrderRq) {
         super.updateFromRequest(updateOrderRq);
-        this.stopPrice = updateOrderRq.getStopPrice();
+        if (status == OrderStatus.INACTIVE)
+            this.stopPrice = updateOrderRq.getStopPrice();
     }
 
     @Override

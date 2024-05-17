@@ -64,7 +64,7 @@ public class AuctionMatcher implements Matcher{
         if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
             return MatchResult.stopLimitOrderIsNotAllowed();
         }
-        if (order.getMinimumExecutionQuantity() != 0){
+        if (order.getStatus() == OrderStatus.NEW && order.getMinimumExecutionQuantity() != 0){
             return MatchResult.minimumExecutionQuantityIsNotAllowed();
         }
         if (order.getSide() == Side.BUY) {
