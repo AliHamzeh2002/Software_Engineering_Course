@@ -88,50 +88,6 @@ public class OrderHandlerAuctionMatcherTest {
     }
 
     @Test
-    void stop_limit_order_can_not_have_minimum_execution_quantity() {
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 200, 10));
-        verify(eventPublisher).publish(new OrderRejectedEvent(1, 200, List.of(Message.CANNOT_SPECIFY_MINIMUM_EXECUTION_QUANTITY_FOR_A_STOP_LIMIT_ORDER)));
-    }
-
-    @Test
-    void stop_limit_order_can_not_be_iceberg(){
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 100, 0, 10));
-        verify(eventPublisher).publish(new OrderRejectedEvent(1, 200, List.of(Message.STOP_LIMIT_ORDER_CANNOT_BE_ICEBERG)));
-    }
-
-    @Test
-    void inactive_sell_stop_limit_order_is_accepted(){
-        security.setLastTradePrice(100);
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0, 10));
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
-    }
-
-    @Test
-    void inactive_buy_stop_limit_order_is_accepted(){
-        security.setLastTradePrice(5);
-        broker1.increaseCreditBy(100);
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.BUY, 10, 10, 1, shareholder.getShareholderId(), 0, 0, 10));
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
-    }
-
-    @Test
-    void new_sell_stop_limit_order_is_activated(){
-        security.setLastTradePrice(5);
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.SELL, 300, 15450, 2, shareholder.getShareholderId(), 0, 0, 10));
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
-        verify(eventPublisher).publish(new OrderActivatedEvent(1, 200));
-    }
-
-    @Test
-    void new_buy_stop_limit_order_is_activated(){
-        security.setLastTradePrice(30);
-        broker1.increaseCreditBy(100);
-        orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 200, LocalDateTime.now(), Side.BUY, 10, 10, 1, shareholder.getShareholderId(), 0, 0, 20));
-        verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
-        verify(eventPublisher).publish(new OrderActivatedEvent(1, 200));
-    }
-
-    @Test
     void security_matcher_changes_state_from_continuous_to_auction(){
         orderHandler.handleChangeMatchingState(new ChangeMatchingStateRq(1, "ABC", MatchingState.AUCTION));
         assertThat(security.getMatchingState()).isEqualTo(MatchingState.AUCTION);
@@ -278,7 +234,7 @@ public class OrderHandlerAuctionMatcherTest {
     }
 
     @Test
-    void stop_limit_order_activates_after_reopening_from_auction_to_continuous(){
+    void stop_limit_order_activates_and_executes_after_reopening_from_auction_to_continuous(){
         security.setLastTradePrice(5);
         orderHandler.handleEnterOrder(EnterOrderRq.createNewOrderRq(1, "ABC", 5, LocalDateTime.now(), Side.BUY, 100, 30, 1, shareholder.getShareholderId(), 0, 0, 10));
         security.setMatchingState(MatchingState.AUCTION);

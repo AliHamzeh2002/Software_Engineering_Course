@@ -19,12 +19,12 @@ public class AuctionMatcher implements Matcher{
         for (Order buyOrder : buyQueue) {
             if (!buyOrder.matches(openingPrice))
                 break;
-            tradableQuantityBuy += buyOrder.getQuantity();
+            tradableQuantityBuy += buyOrder.getTotalQuantity();
         }
         for (Order sellOrder : sellQueue) {
             if (!sellOrder.matches(openingPrice))
                 break;
-            tradableQuantitySell += sellOrder.getQuantity();
+            tradableQuantitySell += sellOrder.getTotalQuantity();
         }
         return Math.min(tradableQuantityBuy, tradableQuantitySell);
     }

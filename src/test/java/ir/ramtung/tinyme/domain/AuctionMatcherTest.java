@@ -55,6 +55,14 @@ public class AuctionMatcherTest {
     }
 
     @Test
+    void calculate_tradable_quantity_works_correctly_with_icebreg_order(){
+        Order icebergOrder = new IcebergOrder(10, security, BUY, 10, 30, broker1, shareholder, 2, 0);
+        orderBook.enqueue(icebergOrder);
+        int tradableQuantity = matcher.calculateTradableQuantity(25, orderBook);
+        assertThat(tradableQuantity).isEqualTo(15);
+    }
+
+    @Test
     void calculate_opening_price_with_multiple_max_tradable_quantity_works_correctly(){
         int openingPrice = matcher.calculateOpeningPrice(orderBook, 40);
         assertThat(openingPrice).isEqualTo(20);
@@ -67,9 +75,26 @@ public class AuctionMatcherTest {
     }
 
     @Test
-    void calculate_opening_price_when_order_book_is_empty(){ //TODO: check the answer
+    void calculate_opening_price_when_order_book_is_empty(){
         orderBook.getBuyQueue().clear();
         orderBook.getSellQueue().clear();
+        int openingPrice = matcher.calculateOpeningPrice(orderBook, 40);
+        assertThat(openingPrice).isEqualTo(AuctionMatcher.INVALID_OPENING_PRICE);
+    }
+
+    @Test
+    void calculate_opening_price_when_there_is_no_match(){
+        orderBook.getBuyQueue().clear();
+        orderBook.getSellQueue().clear();
+        orders = Arrays.asList(
+                new Order(1, security, BUY, 5, 30, broker1, shareholder, 0),
+                new Order(2, security, BUY, 5, 20, broker1, shareholder, 0),
+                new Order(3, security, BUY, 5, 10, broker1, shareholder, 0),
+                new Order(6, security, Side.SELL, 5, 35, broker2, shareholder, 0),
+                new Order(7, security, Side.SELL, 5, 45, broker2, shareholder, 0),
+                new Order(8, security, Side.SELL, 5, 55, broker2, shareholder, 0)
+        );
+        orders.forEach(order -> orderBook.enqueue(order));
         int openingPrice = matcher.calculateOpeningPrice(orderBook, 40);
         assertThat(openingPrice).isEqualTo(AuctionMatcher.INVALID_OPENING_PRICE);
     }
@@ -149,6 +174,23 @@ public class AuctionMatcherTest {
     }
 
     @Test
+    void no_trades_are_made_in_the_reopening() {
+        orderBook.getBuyQueue().clear();
+        orderBook.getSellQueue().clear();
+        orders = Arrays.asList(
+                new Order(1, security, BUY, 5, 30, broker1, shareholder, 0),
+                new Order(2, security, BUY, 5, 20, broker1, shareholder, 0),
+                new Order(3, security, BUY, 5, 10, broker1, shareholder, 0),
+                new Order(6, security, Side.SELL, 5, 35, broker2, shareholder, 0),
+                new Order(7, security, Side.SELL, 5, 45, broker2, shareholder, 0),
+                new Order(8, security, Side.SELL, 5, 55, broker2, shareholder, 0)
+        );
+        orders.forEach(order -> orderBook.enqueue(order));
+        MatchResult matchResult = matcher.reopen(orderBook, 30);
+        assertThat(matchResult.trades()).isEmpty();
+    }
+
+    @Test
     void credits_are_updated_in_the_reopening(){
         matcher.reopen(orderBook, 30);
         assertThat(broker1.getCredit()).isEqualTo(100_000_000L + 50);
@@ -156,7 +198,7 @@ public class AuctionMatcherTest {
     }
 
     @Test
-    void iceberg_order_is_replenished_in_the_reopening() {
+    void buy_iceberg_order_is_replenished_in_the_reopening() {
         orders = Arrays.asList(
                 new Order(1, security, BUY, 5, 30, broker1, shareholder, 0),
                 new IcebergOrder(5, security, BUY, 5, 20, broker1, shareholder, 2, 0),
@@ -174,6 +216,30 @@ public class AuctionMatcherTest {
                 new Trade(security, 20, 5, orders.get(0).snapshotWithQuantity(5), orders.get(4).snapshotWithQuantity(5)),
                 new Trade(security, 20, 2, orders.get(1).snapshotWithQuantity(5), orders.get(5).snapshotWithQuantity(5)),
                 new Trade(security, 20, 3, orders.get(2).snapshotWithQuantity(5), orders.get(5).snapshotWithQuantity(3))
+        );
+        assertThat(matchResult.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
+        assertThat(matchResult.trades()).isEqualTo(trades);
+    }
+
+    @Test
+    void sell_iceberg_order_is_replenished_in_the_reopening() {
+        orders = Arrays.asList(
+                new Order(1, security, BUY, 5, 30, broker1, shareholder, 0),
+                new Order(2, security, BUY, 5, 20, broker1, shareholder, 0),
+                new Order(3, security, BUY, 5, 10, broker1, shareholder, 0),
+                new Order(6, security, Side.SELL, 5, 5, broker2, shareholder, 0),
+                new IcebergOrder(5, security, Side.SELL, 5, 14, broker2, shareholder, 2, 0),
+                new Order(7, security, Side.SELL, 5, 14, broker2, shareholder, 0),
+                new Order(8, security, Side.SELL, 5, 25, broker2, shareholder, 0)
+        );
+        security.getOrderBook().getBuyQueue().clear();
+        security.getOrderBook().getSellQueue().clear();
+        orders.forEach(order -> orderBook.enqueue(order));
+        MatchResult matchResult = matcher.reopen(orderBook, 30);
+        List<Trade> trades = List.of(
+                new Trade(security, 20, 5, orders.get(0).snapshotWithQuantity(5), orders.get(3).snapshotWithQuantity(5)),
+                new Trade(security, 20, 2, orders.get(1).snapshotWithQuantity(5), orders.get(4).snapshotWithQuantity(5)),
+                new Trade(security, 20, 3, orders.get(1).snapshotWithQuantity(3), orders.get(5).snapshotWithQuantity(5))
         );
         assertThat(matchResult.outcome()).isEqualTo(MatchingOutcome.EXECUTED);
         assertThat(matchResult.trades()).isEqualTo(trades);
