@@ -60,8 +60,6 @@ public class ContinuousMatcher implements Matcher{
         }
     }
 
-
-
     public MatchResult execute(Order order) {
 
         if (order instanceof StopLimitOrder stopLimitOrder && !stopLimitOrder.isActive()) {

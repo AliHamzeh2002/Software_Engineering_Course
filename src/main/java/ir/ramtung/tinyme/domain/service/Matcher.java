@@ -4,6 +4,6 @@ import ir.ramtung.tinyme.domain.entity.MatchResult;
 import ir.ramtung.tinyme.domain.entity.Order;
 
 public interface Matcher {
-    public MatchResult execute(Order order);
+    MatchResult execute(Order order);
 }
 

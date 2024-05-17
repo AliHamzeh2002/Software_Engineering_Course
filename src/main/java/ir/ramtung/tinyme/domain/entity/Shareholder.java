@@ -8,16 +8,14 @@ import lombok.ToString;
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 public class Shareholder {
-    @Getter
     @EqualsAndHashCode.Include
     private long shareholderId;
-    @Getter
     private String name;
-    @Getter
     @Builder.Default
     private Map<Security, Integer> positions = new HashMap<>();
 

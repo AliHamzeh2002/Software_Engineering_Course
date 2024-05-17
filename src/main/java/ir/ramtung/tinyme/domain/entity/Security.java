@@ -5,7 +5,6 @@ import ir.ramtung.tinyme.domain.service.Matcher;
 import ir.ramtung.tinyme.messaging.exception.InvalidRequestException;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-import ir.ramtung.tinyme.domain.service.ContinuousMatcher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.request.MatchingState;
 import lombok.Builder;
@@ -132,8 +131,7 @@ public class Security {
             inactiveOrderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
             order.updateFromRequest(updateOrderRq);
             order.markAsNew();
-            MatchResult matchResult = matcher.execute(stoplimitOrder);
-            return matchResult;
+            return matcher.execute(stoplimitOrder);
         }
 
         boolean losesPriority = order.isQuantityIncreased(updateOrderRq.getQuantity())

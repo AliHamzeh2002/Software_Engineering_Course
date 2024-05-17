@@ -81,8 +81,6 @@ public class OrderBook {
         getQueue(side).removeFirst();
     }
 
-    public void addFirst(Order order, Side side) { getQueue(side).addFirst(order); }
-
     public int totalSellQuantityByShareholder(Shareholder shareholder) {
         return sellQueue.stream()
                 .filter(order -> order.getShareholder().equals(shareholder))

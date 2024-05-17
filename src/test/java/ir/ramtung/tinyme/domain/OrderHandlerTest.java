@@ -9,10 +9,8 @@ import ir.ramtung.tinyme.messaging.EventPublisher;
 import ir.ramtung.tinyme.messaging.Message;
 import ir.ramtung.tinyme.messaging.TradeDTO;
 import ir.ramtung.tinyme.messaging.event.*;
-import ir.ramtung.tinyme.messaging.request.ChangeMatchingStateRq;
 import ir.ramtung.tinyme.messaging.request.DeleteOrderRq;
 import ir.ramtung.tinyme.messaging.request.EnterOrderRq;
-import ir.ramtung.tinyme.messaging.request.MatchingState;
 import ir.ramtung.tinyme.repository.BrokerRepository;
 import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
@@ -25,11 +23,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static ir.ramtung.tinyme.domain.entity.Side.BUY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -53,8 +49,6 @@ public class OrderHandlerTest {
     private Broker broker2;
     private Broker broker3;
 
-    private List<Order> orders;
-
     @BeforeEach
     void setup() {
         securityRepository.clear();
@@ -63,7 +57,6 @@ public class OrderHandlerTest {
 
         security = Security.builder().isin("ABC").build();
         securityRepository.addSecurity(security);
-        orders = new ArrayList<Order>();
 
         shareholder = Shareholder.builder().build();
         shareholder.incPosition(security, 100_000);

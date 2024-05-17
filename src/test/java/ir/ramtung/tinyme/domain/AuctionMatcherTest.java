@@ -150,7 +150,7 @@ public class AuctionMatcherTest {
 
     @Test
     void credits_are_updated_in_the_reopening(){
-        MatchResult matchResult = matcher.reopen(orderBook, 30);
+        matcher.reopen(orderBook, 30);
         assertThat(broker1.getCredit()).isEqualTo(100_000_000L + 50);
         assertThat(broker2.getCredit()).isEqualTo(100_000_000L + 200);
     }
