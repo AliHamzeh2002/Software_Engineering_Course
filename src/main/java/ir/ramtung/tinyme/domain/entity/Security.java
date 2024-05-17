@@ -91,7 +91,7 @@ public class Security {
         return order;
     }
 
-    public void deleteOrder(DeleteOrderRq deleteOrderRq) throws InvalidRequestException {
+    public MatchResult deleteOrder(DeleteOrderRq deleteOrderRq, Matcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
         if (order == null)
             throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
@@ -100,11 +100,16 @@ public class Security {
         }
         if (order.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
-        if (order.getStatus() == OrderStatus.INACTIVE) {
+        if (order.getStatus() == OrderStatus.INACTIVE)
             inactiveOrderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
-            return;
+        else
+            orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
+        if (matchingState == MatchingState.AUCTION){
+            int openingPrice = ((AuctionMatcher) matcher).calculateOpeningPrice(orderBook, lastTradePrice);
+            int tradableQuantity = ((AuctionMatcher) matcher).calculateTradableQuantity(openingPrice, orderBook);
+            return MatchResult.executed(order, List.of(), openingPrice, tradableQuantity);
         }
-        orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
+        return MatchResult.executed(order, List.of());
     }
 
     public MatchResult updateOrder(EnterOrderRq updateOrderRq, Matcher matcher) throws InvalidRequestException {

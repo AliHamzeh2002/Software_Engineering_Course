@@ -94,7 +94,7 @@ class SecurityTest {
     @Test
     void delete_order_works() {
         DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), Side.SELL, 6);
-        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq, matcher));
         assertThat(security.getOrderBook().getBuyQueue()).isEqualTo(orders.subList(0, 5));
         assertThat(security.getOrderBook().getSellQueue()).isEqualTo(orders.subList(6, 10));
     }
@@ -102,7 +102,7 @@ class SecurityTest {
     @Test
     void deleting_non_existing_order_fails() {
         DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), Side.SELL, 1);
-        assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> security.deleteOrder(deleteOrderRq, matcher));
     }
 
     @Test
@@ -214,7 +214,7 @@ class SecurityTest {
         StopLimitOrder stopLimitOrder = new StopLimitOrder(11, security, BUY, 100, 15500, broker, shareholder, 10);
         security.getInactiveOrderBook().enqueue(stopLimitOrder);
         DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), BUY, 11);
-        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq, matcher));
         assertThat(security.getInactiveOrderBook().getBuyQueue()).isEmpty();
     }
 

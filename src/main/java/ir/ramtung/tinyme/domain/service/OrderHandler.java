@@ -126,12 +126,10 @@ public class OrderHandler {
         try {
             validateDeleteOrderRq(deleteOrderRq);
             Security security = securityRepository.findSecurityByIsin(deleteOrderRq.getSecurityIsin());
-            security.deleteOrder(deleteOrderRq);
+            MatchResult matchResult = security.deleteOrder(deleteOrderRq, getSecurityMatcher(security));
             eventPublisher.publish(new OrderDeletedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId()));
             if (security.getMatchingState() == MatchingState.AUCTION){
-                int openingPrice = auctionMatcher.calculateOpeningPrice(security.getOrderBook(), security.getLastTradePrice());
-                int tradableQuantity = auctionMatcher.calculateTradableQuantity(openingPrice, security.getOrderBook());
-                eventPublisher.publish(new OpeningPriceEvent(security.getIsin(), openingPrice, tradableQuantity));
+                eventPublisher.publish(new OpeningPriceEvent(security.getIsin(), matchResult.openingPrice(), matchResult.tradableQuantity()));
             }
         } catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(deleteOrderRq.getRequestId(), deleteOrderRq.getOrderId(), ex.getReasons()));

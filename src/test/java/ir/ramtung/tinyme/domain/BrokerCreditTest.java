@@ -124,14 +124,14 @@ public class BrokerCreditTest {
         EnterOrderRq enterOrderRq = EnterOrderRq.createNewOrderRq(1, security.getIsin(), 9, LocalDateTime.now(), Side.BUY, 180, 3000, 1, 0, 0,0);
         security.newOrder(enterOrderRq, broker1, shareholder, matcher);
         DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), Side.BUY, 9);
-        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq, matcher));
         assertThat(broker1.getCredit()).isEqualTo(BROKER1_INIT_CREDIT - 100 * 3000);
     }
 
     @Test
     void sell_order_is_deleted(){
         DeleteOrderRq deleteOrderRq = new DeleteOrderRq(1, security.getIsin(), Side.SELL, 3);
-        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq));
+        assertThatNoException().isThrownBy(() -> security.deleteOrder(deleteOrderRq, matcher));
         assertThat(broker2.getCredit()).isEqualTo(BROKER2_INIT_CREDIT);
     }
 
