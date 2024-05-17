@@ -12,6 +12,7 @@ import ir.ramtung.tinyme.repository.SecurityRepository;
 import ir.ramtung.tinyme.repository.ShareholderRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +26,8 @@ public class OrderHandler {
     ContinuousMatcher continuousMatcher;
     AuctionMatcher auctionMatcher;
 
+    HashMap<Long, Long> orderIdToRequestId;
+
     public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, ContinuousMatcher continuousMatcher, AuctionMatcher auctionMatcher) {
         this.securityRepository = securityRepository;
         this.brokerRepository = brokerRepository;
@@ -32,6 +35,7 @@ public class OrderHandler {
         this.eventPublisher = eventPublisher;
         this.continuousMatcher = continuousMatcher;
         this.auctionMatcher = auctionMatcher;
+        this.orderIdToRequestId = new HashMap<>();
     }
 
     public void handleEnterOrder(EnterOrderRq enterOrderRq) {
@@ -78,6 +82,7 @@ public class OrderHandler {
 
             if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER){
                 eventPublisher.publish(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
+                orderIdToRequestId.put(enterOrderRq.getOrderId(), enterOrderRq.getRequestId());
             }
 
             else {
@@ -90,7 +95,7 @@ public class OrderHandler {
                 eventPublisher.publish(new OpeningPriceEvent(security.getIsin(), matchResult.openingPrice(), matchResult.tradableQuantity()));
             }
             if (security.getLastTradePrice() != Security.EMPTY_TRADE_PRICE){
-                handleActivations(security,enterOrderRq.getRequestId());
+                handleActivations(security);
             }
 
         } catch (InvalidRequestException ex) {
@@ -104,9 +109,10 @@ public class OrderHandler {
         return continuousMatcher;
     }
 
-    private void handleActivations(Security security, long requestId){
+    private void handleActivations(Security security){
         StopLimitOrder activatedOrder;
         while ((activatedOrder = security.getFirstActivatedOrder()) != null){
+            long requestId = orderIdToRequestId.get(activatedOrder.getOrderId());
             MatchResult result = security.activateOrder(activatedOrder, getSecurityMatcher(security));
             eventPublisher.publish(new OrderActivatedEvent(requestId, activatedOrder.getOrderId()));
             if (!result.trades().isEmpty()) {
@@ -137,7 +143,7 @@ public class OrderHandler {
         MatchResult matchResult = security.changeMatchingState(changeMatchingStateRq.getTargetState(), auctionMatcher);
         if (!matchResult.trades().isEmpty()){
             matchResult.trades().forEach(trade -> eventPublisher.publish(new TradeEvent(changeMatchingStateRq.getSecurityIsin(), trade.getPrice(), trade.getQuantity(), trade.getBuy().getOrderId(), trade.getSell().getOrderId())));
-            handleActivations(security, changeMatchingStateRq.getRequestId());
+            handleActivations(security);
         }
         eventPublisher.publish(new SecurityStateChangedEvent(changeMatchingStateRq.getSecurityIsin(), changeMatchingStateRq.getTargetState()));
     }
