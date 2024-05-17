@@ -88,7 +88,6 @@ public class AuctionMatcher implements Matcher{
             if (icebergOrder.getQuantity() > 0)
                 orderBook.enqueue(icebergOrder);
         }
-
     }
 
     public MatchResult reopen(OrderBook orderBook,int lastTradePrice) {
