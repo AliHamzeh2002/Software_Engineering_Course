@@ -13,15 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChangeMatchingStateRq {
-    private long requestId;
     private String securityIsin;
     private MatchingState targetState;
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime entryTime;
 
-    public ChangeMatchingStateRq(long requestId, String securityIsin, MatchingState targetState) {
-        this.requestId = requestId;
+    public ChangeMatchingStateRq( String securityIsin, MatchingState targetState) {
         this.securityIsin = securityIsin;
         this.targetState = targetState;
         this.entryTime = LocalDateTime.now();
