@@ -91,10 +91,11 @@ public class Security {
 
     public MatchResult deleteOrder(DeleteOrderRq deleteOrderRq, Matcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
-        if (order == null)
-            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
-        if (matchingState == MatchingState.AUCTION && order.getStatus() == OrderStatus.INACTIVE){
-            throw new InvalidRequestException(Message.CANNOT_DELETE_INACTIVE_ORDER_IN_AUCTION);
+        try{
+            validateDeleteOrder(order);
+        }
+        catch (InvalidRequestException e){
+            throw e;
         }
         if (order.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
@@ -171,5 +172,13 @@ public class Security {
             throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER);
         if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (updateOrderRq.getStopPrice() != 0))
             throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER);
+    }
+
+    private void validateDeleteOrder(Order order) throws InvalidRequestException {
+        if (order == null)
+            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
+        if (matchingState == MatchingState.AUCTION && order.getStatus() == OrderStatus.INACTIVE) {
+            throw new InvalidRequestException(Message.CANNOT_DELETE_INACTIVE_ORDER_IN_AUCTION);
+        }
     }
 }
