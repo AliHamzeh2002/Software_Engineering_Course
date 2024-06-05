@@ -161,6 +161,10 @@ public class Order {
         price = updateOrderRq.getPrice();
     }
 
+    public boolean isPriorityLostAfterUpdate(EnterOrderRq updateOrderRq){
+        return isQuantityIncreased(updateOrderRq.getQuantity()) || updateOrderRq.getPrice() != price;
+    }
+
     public long getValue() {
         return (long)price * quantity;
     }

@@ -37,10 +37,6 @@ public class Security {
     private MatchingState matchingState = MatchingState.CONTINUOUS;
 
     public MatchResult newOrder(EnterOrderRq enterOrderRq, Broker broker, Shareholder shareholder, Matcher matcher) {
-        if (enterOrderRq.getSide() == Side.SELL &&
-                !shareholder.hasEnoughPositionsOn(this,
-                orderBook.totalSellQuantityByShareholder(shareholder) + enterOrderRq.getQuantity()))
-            return MatchResult.notEnoughPositions();
         Order order;
         if (enterOrderRq.getPeakSize() != 0 && enterOrderRq.getStopPrice() == 0) {
             order = new IcebergOrder(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
@@ -89,6 +85,12 @@ public class Security {
         return order;
     }
 
+    private void removeByOrderId(Side side, long orderId) {
+        if (orderBook.removeByOrderId(side, orderId))
+            return;
+        inactiveOrderBook.removeByOrderId(side, orderId);
+    }
+
     public MatchResult deleteOrder(DeleteOrderRq deleteOrderRq, Matcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
         try{
@@ -99,10 +101,7 @@ public class Security {
         }
         if (order.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
-        if (order.getStatus() == OrderStatus.INACTIVE)
-            inactiveOrderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
-        else
-            orderBook.removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
+        removeByOrderId(deleteOrderRq.getSide(), deleteOrderRq.getOrderId());
         if (matchingState == MatchingState.AUCTION){
             int openingPrice = ((AuctionMatcher) matcher).calculateOpeningPrice(orderBook, lastTradePrice);
             int tradableQuantity = ((AuctionMatcher) matcher).calculateTradableQuantity(openingPrice, orderBook);
@@ -118,37 +117,25 @@ public class Security {
         } catch (InvalidRequestException e){
             throw e;
         }
-        if (updateOrderRq.getSide() == Side.SELL &&
-                !order.getShareholder().hasEnoughPositionsOn(this,
-                orderBook.totalSellQuantityByShareholder(order.getShareholder()) - order.getQuantity() + updateOrderRq.getQuantity()))
-            return MatchResult.notEnoughPositions();
 
-        if ((order instanceof StopLimitOrder stoplimitOrder) && order.getStatus() == OrderStatus.INACTIVE){
-            inactiveOrderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
-            order.updateFromRequest(updateOrderRq);
-            order.markAsNew();
-            return matcher.execute(stoplimitOrder);
-        }
-
-        boolean losesPriority = order.isQuantityIncreased(updateOrderRq.getQuantity())
-                || updateOrderRq.getPrice() != order.getPrice()
-                || ((order instanceof IcebergOrder icebergOrder) && (icebergOrder.getPeakSize() < updateOrderRq.getPeakSize()));
-
-        if (updateOrderRq.getSide() == Side.BUY) {
+        if (updateOrderRq.getSide() == Side.BUY)
             order.getBroker().increaseCreditBy(order.getValue());
-        }
+
         Order originalOrder = order.snapshot();
         order.updateFromRequest(updateOrderRq);
-        if (!losesPriority) {
+        if (!originalOrder.isPriorityLostAfterUpdate(updateOrderRq)) {
             if (updateOrderRq.getSide() == Side.BUY) {
                 order.getBroker().decreaseCreditBy(order.getValue());
             }
             return MatchResult.executed();
         }
+
+        if (order.getStatus() == OrderStatus.INACTIVE)
+            order.markAsNew();
         else
             order.markAsUpdating();
 
-        orderBook.removeByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
+        removeByOrderId(order.getSide(), order.getOrderId());
         MatchResult matchResult = matcher.execute(order);
         if (matchResult.outcome() != MatchingOutcome.EXECUTED) {
             orderBook.enqueue(originalOrder);

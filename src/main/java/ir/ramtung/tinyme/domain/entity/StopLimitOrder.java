@@ -74,4 +74,9 @@ public class StopLimitOrder extends Order {
         }
     }
 
+    @Override
+    public boolean isPriorityLostAfterUpdate(EnterOrderRq updateOrderRq){
+        return super.isPriorityLostAfterUpdate(updateOrderRq) || stopPrice != updateOrderRq.getStopPrice();
+    }
+
 }

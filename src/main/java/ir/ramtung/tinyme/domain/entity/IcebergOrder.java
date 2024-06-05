@@ -122,4 +122,9 @@ public class IcebergOrder extends Order {
         }
         peakSize = updateOrderRq.getPeakSize();
     }
+
+    @Override
+    public boolean isPriorityLostAfterUpdate(EnterOrderRq updateOrderRq) {
+        return super.isPriorityLostAfterUpdate(updateOrderRq) || peakSize < updateOrderRq.getPeakSize();
+    }
 }

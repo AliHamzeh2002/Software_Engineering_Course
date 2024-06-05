@@ -50,6 +50,10 @@ public class ContinuousMatcher extends Matcher{
     }
 
     public MatchResult execute(Order order) {
+        if (order.getSide() == Side.SELL &&
+                !order.getShareholder().hasEnoughPositionsOn(order.getSecurity(),
+                        order.getSecurity().getOrderBook().totalSellQuantityByShareholder(order.getShareholder()) + order.getQuantity()))
+            return MatchResult.notEnoughPositions();
 
         if (order instanceof StopLimitOrder stopLimitOrder && !stopLimitOrder.isActive()) {
             if (stopLimitOrder.getSide() == Side.BUY) {
