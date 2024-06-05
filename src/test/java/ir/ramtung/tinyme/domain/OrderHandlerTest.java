@@ -108,9 +108,9 @@ public class OrderHandlerTest {
                 incomingSellOrder.getBroker().getBrokerId(),
                 incomingSellOrder.getShareholder().getShareholderId(), 0, 0));
 
-        Trade trade1 = new Trade(security, matchingBuyOrder1.getPrice(), matchingBuyOrder1.getQuantity(),
+        Trade trade1 = new Trade(security, matchingBuyOrder1.getPrice(), 300,
                 matchingBuyOrder1, incomingSellOrder);
-        Trade trade2 = new Trade(security, matchingBuyOrder2.getPrice(), matchingBuyOrder2.getQuantity(),
+        Trade trade2 = new Trade(security, matchingBuyOrder2.getPrice(), 300,
                 matchingBuyOrder2, incomingSellOrder.snapshotWithQuantity(700));
         verify(eventPublisher).publish(new OrderAcceptedEvent(1, 200));
         verify(eventPublisher).publish(new OrderExecutedEvent(1, 200, List.of(new TradeDTO(trade1), new TradeDTO(trade2))));

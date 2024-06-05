@@ -1,9 +1,21 @@
 package ir.ramtung.tinyme.domain.service;
 
-import ir.ramtung.tinyme.domain.entity.MatchResult;
-import ir.ramtung.tinyme.domain.entity.Order;
+import ir.ramtung.tinyme.domain.entity.*;
 
-public interface Matcher {
-    MatchResult execute(Order order);
+public abstract class Matcher {
+    public abstract MatchResult execute(Order order);
+    protected void handleOrderQuantityAfterTrade(Order order, int tradedQuantity, OrderBook orderBook){
+        order.decreaseQuantity(tradedQuantity);
+        if (order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.UPDATING || order.getStatus() == OrderStatus.ACTIVE)
+            return;
+        if (order.getQuantity() != 0)
+            return;
+        orderBook.removeFirst(order.getSide());
+        if (order instanceof IcebergOrder icebergOrder) {
+            icebergOrder.replenish();
+            if (icebergOrder.getQuantity() > 0)
+                orderBook.enqueue(icebergOrder);
+        }
+    }
 }
 

@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 @Service
-public class ContinuousMatcher implements Matcher{
+public class ContinuousMatcher extends Matcher{
     public MatchResult match(Order newOrder) {
         OrderBook orderBook = newOrder.getSecurity().getOrderBook();
         LinkedList<Trade> trades = new LinkedList<>();
@@ -29,19 +29,8 @@ public class ContinuousMatcher implements Matcher{
             trade.increaseSellersCredit();
             trades.add(trade);
 
-            if (newOrder.getQuantity() >= matchingOrder.getQuantity()) {
-                newOrder.decreaseQuantity(matchingOrder.getQuantity());
-                orderBook.removeFirst(matchingOrder.getSide());
-                if (matchingOrder instanceof IcebergOrder icebergOrder) {
-                    icebergOrder.decreaseQuantity(matchingOrder.getQuantity());
-                    icebergOrder.replenish();
-                    if (icebergOrder.getQuantity() > 0)
-                        orderBook.enqueue(icebergOrder);
-                }
-            } else {
-                matchingOrder.decreaseQuantity(newOrder.getQuantity());
-                newOrder.makeQuantityZero();
-            }
+            handleOrderQuantityAfterTrade(newOrder, trade.getQuantity(), orderBook);
+            handleOrderQuantityAfterTrade(matchingOrder, trade.getQuantity(), orderBook);
         }
         if (newOrder.getStatus() == OrderStatus.NEW && !newOrder.hasEnoughExecutions()) {
             rollbackTrades(newOrder, trades);

@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 
 @Service
-public class AuctionMatcher implements Matcher{
+public class AuctionMatcher extends Matcher{
 
     public final static int INVALID_OPENING_PRICE = 0;
 
@@ -76,18 +76,6 @@ public class AuctionMatcher implements Matcher{
         int openingPrice = calculateOpeningPrice(order.getSecurity().getOrderBook(), order.getSecurity().getLastTradePrice());
         int tradableQuantity = calculateTradableQuantity(openingPrice, order.getSecurity().getOrderBook());
         return MatchResult.executed(order, new LinkedList<>(), openingPrice, tradableQuantity);
-    }
-
-    private void handleOrderQuantityAfterTrade(Order order, int tradedQuantity, OrderBook orderBook){
-        order.decreaseQuantity(tradedQuantity);
-        if (order.getQuantity() != 0)
-            return;
-        orderBook.removeFirst(order.getSide());
-        if (order instanceof IcebergOrder icebergOrder) {
-            icebergOrder.replenish();
-            if (icebergOrder.getQuantity() > 0)
-                orderBook.enqueue(icebergOrder);
-        }
     }
 
     public MatchResult reopen(OrderBook orderBook,int lastTradePrice) {
