@@ -50,7 +50,7 @@ public class StopLimitOrder extends Order {
 
     public void markAsActive(){this.status = OrderStatus.ACTIVE;}
 
-    public boolean queuesBeforeInInactiveQueue(StopLimitOrder order) {
+    public boolean queuesBeforeInactiveQueue(StopLimitOrder order) {
         if (order.getSide() == Side.BUY) {
             return stopPrice < order.getStopPrice();
         } else {
@@ -68,7 +68,7 @@ public class StopLimitOrder extends Order {
     @Override
     public boolean queuesBefore(Order order) {
         if (order.getStatus() == OrderStatus.INACTIVE) {
-            return queuesBeforeInInactiveQueue((StopLimitOrder) order);
+            return queuesBeforeInactiveQueue((StopLimitOrder) order);
         } else {
             return super.queuesBefore(order);
         }

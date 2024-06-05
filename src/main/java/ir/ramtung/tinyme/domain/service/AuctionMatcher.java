@@ -12,20 +12,8 @@ public class AuctionMatcher extends Matcher{
     public final static int INVALID_OPENING_PRICE = 0;
 
     public int calculateTradableQuantity(int openingPrice, OrderBook orderBook){
-        int tradableQuantityBuy = 0;
-        int tradableQuantitySell = 0;
-        LinkedList<Order> buyQueue = orderBook.getBuyQueue();
-        LinkedList<Order> sellQueue = orderBook.getSellQueue();
-        for (Order buyOrder : buyQueue) {
-            if (!buyOrder.matches(openingPrice))
-                break;
-            tradableQuantityBuy += buyOrder.getTotalQuantity();
-        }
-        for (Order sellOrder : sellQueue) {
-            if (!sellOrder.matches(openingPrice))
-                break;
-            tradableQuantitySell += sellOrder.getTotalQuantity();
-        }
+        int tradableQuantityBuy = orderBook.calculateTradableQuantity(Side.BUY, openingPrice);
+        int tradableQuantitySell = orderBook.calculateTradableQuantity(Side.SELL, openingPrice);
         return Math.min(tradableQuantityBuy, tradableQuantitySell);
     }
 

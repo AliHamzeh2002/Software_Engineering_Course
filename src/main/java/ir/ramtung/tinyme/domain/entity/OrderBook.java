@@ -2,9 +2,7 @@ package ir.ramtung.tinyme.domain.entity;
 
 import lombok.Getter;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 @Getter
 public class OrderBook {
@@ -87,4 +85,16 @@ public class OrderBook {
                 .mapToInt(Order::getTotalQuantity)
                 .sum();
     }
+
+    public int calculateTradableQuantity(Side side, int openingPrice){
+        int tradableQuantity = 0;
+        LinkedList<Order> queue = getQueue(side);
+        for (Order order : queue) {
+            if (!order.matches(openingPrice))
+                break;
+            tradableQuantity += order.getTotalQuantity();
+        }
+        return tradableQuantity;
+    }
+
 }
