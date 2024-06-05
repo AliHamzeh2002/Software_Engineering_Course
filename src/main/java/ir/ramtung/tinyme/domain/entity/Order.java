@@ -28,7 +28,17 @@ public class Order {
     @Builder.Default
     protected int executionQuantity = 0;
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, OrderStatus status, int minimumExecutionQuantity, int executionQuantity) {
+    public Order(long orderId,
+                 Security security,
+                 Side side,
+                 int quantity,
+                 int price,
+                 Broker broker,
+                 Shareholder shareholder,
+                 LocalDateTime entryTime,
+                 OrderStatus status,
+                 int minimumExecutionQuantity,
+                 int executionQuantity) {
         this.orderId = orderId;
         this.security = security;
         this.side = side;
@@ -43,7 +53,16 @@ public class Order {
     }
 
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, OrderStatus status, int minimumExecutionQuantity) {
+    public Order(long orderId,
+                 Security security,
+                 Side side,
+                 int quantity,
+                 int price,
+                 Broker broker,
+                 Shareholder shareholder,
+                 LocalDateTime entryTime,
+                 OrderStatus status,
+                 int minimumExecutionQuantity) {
         this.orderId = orderId;
         this.security = security;
         this.side = side;
@@ -57,7 +76,15 @@ public class Order {
         this.executionQuantity = 0;
     }
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, LocalDateTime entryTime, int minimumExecutionQuantity) {
+    public Order(long orderId,
+                 Security security,
+                 Side side,
+                 int quantity,
+                 int price,
+                 Broker broker,
+                 Shareholder shareholder,
+                 LocalDateTime entryTime,
+                 int minimumExecutionQuantity) {
         this.orderId = orderId;
         this.security = security;
         this.side = side;
@@ -71,7 +98,14 @@ public class Order {
         this.executionQuantity = 0;
     }
 
-    public Order(long orderId, Security security, Side side, int quantity, int price, Broker broker, Shareholder shareholder, int minimumExecutionQuantity) {
+    public Order(long orderId,
+                 Security security,
+                 Side side,
+                 int quantity,
+                 int price,
+                 Broker broker,
+                 Shareholder shareholder,
+                 int minimumExecutionQuantity) {
         this(orderId, security, side, quantity, price, broker, shareholder, LocalDateTime.now(), minimumExecutionQuantity);
     }
 
@@ -106,7 +140,7 @@ public class Order {
         }
     }
 
-    public void queue() {
+    public void markAsQueue() {
         status = OrderStatus.QUEUED;
     }
 

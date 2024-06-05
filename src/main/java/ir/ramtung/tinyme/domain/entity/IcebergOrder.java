@@ -106,9 +106,9 @@ public class IcebergOrder extends Order {
     }
 
     @Override
-    public void queue() {
+    public void markAsQueue() {
         displayedQuantity = Math.min(quantity, peakSize);
-        super.queue();
+        super.markAsQueue();
     }
 
     @Override

@@ -427,7 +427,7 @@ public class OrderHandlerTest {
         );
         orders.forEach(order -> security.getOrderBook().enqueue(order));
         Order originalOrder = orders.get(1).snapshot();
-        originalOrder.queue();
+        originalOrder.markAsQueue();
 
         orderHandler.handleEnterOrder(EnterOrderRq.createUpdateOrderRq(1, "ABC", 2, LocalDateTime.now(), Side.BUY, 500, 590, broker3.getBrokerId(), shareholder.getShareholderId(), 0, 0));
 

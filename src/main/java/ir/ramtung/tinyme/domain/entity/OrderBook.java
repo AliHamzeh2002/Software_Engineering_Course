@@ -25,7 +25,7 @@ public class OrderBook {
                 break;
             }
         }
-        order.queue();
+        order.markAsQueue();
         it.add(order);
     }
 
@@ -64,7 +64,7 @@ public class OrderBook {
 
     public void putBack(Order order) {
         LinkedList<Order> queue = getQueue(order.getSide());
-        order.queue();
+        order.markAsQueue();
         queue.addFirst(order);
     }
 
