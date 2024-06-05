@@ -4,6 +4,7 @@ import ir.ramtung.tinyme.domain.entity.*;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
+import java.util.Set;
 
 
 @Service
@@ -30,15 +31,12 @@ public class AuctionMatcher extends Matcher{
     public int calculateOpeningPrice(OrderBook orderBook, int lastTradePrice){
         int maxTradableQuantity = calculateTradableQuantity(lastTradePrice, orderBook);
         int openingPrice = lastTradePrice;
-        LinkedList<Order> buyOrdersCopy = new LinkedList<>(orderBook.getBuyQueue());
-        LinkedList<Order> sellOrdersCopy = new LinkedList<>(orderBook.getSellQueue());
-        LinkedList<Order> allOrders = new LinkedList<>(buyOrdersCopy);
-        allOrders.addAll(sellOrdersCopy);
-        for (Order order : allOrders){
-            int tradableQuantity = calculateTradableQuantity(order.getPrice(), orderBook);
-            if (isBetterOpeningPrice(openingPrice, maxTradableQuantity, order.getPrice(), tradableQuantity, lastTradePrice)){
+        Set<Integer> prices = orderBook.getUniquePrices();
+        for (int price : prices){
+            int tradableQuantity = calculateTradableQuantity(price, orderBook);
+            if (isBetterOpeningPrice(openingPrice, maxTradableQuantity, price, tradableQuantity, lastTradePrice)){
                 maxTradableQuantity = tradableQuantity;
-                openingPrice = order.getPrice();
+                openingPrice = price;
             }
         }
         if (maxTradableQuantity == 0)

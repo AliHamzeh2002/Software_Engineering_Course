@@ -27,7 +27,7 @@ public class OrderBook {
         it.add(order);
     }
 
-    public LinkedList<Order> getQueue(Side side) {
+    protected LinkedList<Order> getQueue(Side side) {
         return side == Side.BUY ? buyQueue : sellQueue;
     }
 
@@ -95,6 +95,17 @@ public class OrderBook {
             tradableQuantity += order.getTotalQuantity();
         }
         return tradableQuantity;
+    }
+
+    public Set<Integer> getUniquePrices(){
+        Set<Integer> prices = new HashSet<>();
+        for (Order order : buyQueue) {
+            prices.add(order.getPrice());
+        }
+        for (Order order : sellQueue) {
+            prices.add(order.getPrice());
+        }
+        return prices;
     }
 
 }
