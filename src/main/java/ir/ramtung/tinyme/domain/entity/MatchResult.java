@@ -16,6 +16,10 @@ public final class MatchResult {
     @Builder.Default
     private int tradableQuantity = 0;
 
+    public static MatchResult executed() {
+        return new MatchResult(MatchingOutcome.EXECUTED, null, new LinkedList<>());
+    }
+
     public static MatchResult executed(Order remainder, List<Trade> trades) {
         return new MatchResult(MatchingOutcome.EXECUTED, remainder, new LinkedList<>(trades));
     }

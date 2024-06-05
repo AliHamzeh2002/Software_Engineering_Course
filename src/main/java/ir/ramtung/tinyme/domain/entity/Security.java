@@ -59,7 +59,7 @@ public class Security {
     }
 
     public MatchResult changeMatchingState(MatchingState newState, AuctionMatcher auctionMatcher){
-        MatchResult matchResult = MatchResult.executed(null, List.of());
+        MatchResult matchResult = MatchResult.executed();
         if (matchingState == MatchingState.AUCTION){
             matchResult = auctionMatcher.reopen(orderBook, lastTradePrice);
         }
@@ -143,7 +143,7 @@ public class Security {
             if (updateOrderRq.getSide() == Side.BUY) {
                 order.getBroker().decreaseCreditBy(order.getValue());
             }
-            return MatchResult.executed(null, List.of());
+            return MatchResult.executed();
         }
         else
             order.markAsUpdating();
