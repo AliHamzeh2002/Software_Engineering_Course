@@ -42,7 +42,6 @@ public class Security {
                 orderBook.totalSellQuantityByShareholder(shareholder) + enterOrderRq.getQuantity()))
             return MatchResult.notEnoughPositions();
         Order order;
-
         if (enterOrderRq.getPeakSize() != 0 && enterOrderRq.getStopPrice() == 0) {
             order = new IcebergOrder(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
                     enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder,
@@ -56,7 +55,6 @@ public class Security {
         else
             order = new Order(enterOrderRq.getOrderId(), this, enterOrderRq.getSide(),
                     enterOrderRq.getQuantity(), enterOrderRq.getPrice(), broker, shareholder, enterOrderRq.getEntryTime(), enterOrderRq.getMinimumExecutionQuantity());
-
         return matcher.execute(order);
     }
 
@@ -114,19 +112,11 @@ public class Security {
 
     public MatchResult updateOrder(EnterOrderRq updateOrderRq, Matcher matcher) throws InvalidRequestException {
         Order order = findByOrderId(updateOrderRq.getSide(), updateOrderRq.getOrderId());
-        if (order == null)
-            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
-        if ((order instanceof IcebergOrder) && updateOrderRq.getPeakSize() == 0)
-            throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
-        if (!(order instanceof IcebergOrder) && updateOrderRq.getPeakSize() != 0)
-            throw new InvalidRequestException(CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER);
-        if (order.minimumExecutionQuantity != updateOrderRq.getMinimumExecutionQuantity())
-            throw new InvalidRequestException(Message.CANNOT_CHANGE_MINIMUM_EXECUTION_QUANTITY);
-        if (!(order instanceof StopLimitOrder) && updateOrderRq.getStopPrice() > 0)
-            throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER);
-        if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (updateOrderRq.getStopPrice() != 0))
-            throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER);
-
+        try {
+            validateUpdateOrder(updateOrderRq, order);
+        } catch (InvalidRequestException e){
+            throw e;
+        }
         if (updateOrderRq.getSide() == Side.SELL &&
                 !order.getShareholder().hasEnoughPositionsOn(this,
                 orderBook.totalSellQuantityByShareholder(order.getShareholder()) - order.getQuantity() + updateOrderRq.getQuantity()))
@@ -168,5 +158,18 @@ public class Security {
         return matchResult;
     }
 
-
+    private void validateUpdateOrder(EnterOrderRq updateOrderRq, Order order) throws InvalidRequestException {
+        if (order == null)
+            throw new InvalidRequestException(Message.ORDER_ID_NOT_FOUND);
+        if ((order instanceof IcebergOrder) && updateOrderRq.getPeakSize() == 0)
+            throw new InvalidRequestException(Message.INVALID_PEAK_SIZE);
+        if (!(order instanceof IcebergOrder) && updateOrderRq.getPeakSize() != 0)
+            throw new InvalidRequestException(CANNOT_SPECIFY_PEAK_SIZE_FOR_A_NON_ICEBERG_ORDER);
+        if (order.minimumExecutionQuantity != updateOrderRq.getMinimumExecutionQuantity())
+            throw new InvalidRequestException(Message.CANNOT_CHANGE_MINIMUM_EXECUTION_QUANTITY);
+        if (!(order instanceof StopLimitOrder) && updateOrderRq.getStopPrice() > 0)
+            throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_A_NON_STOP_LIMIT_ORDER);
+        if ((order instanceof StopLimitOrder stopLimitOrder) && (stopLimitOrder.getStatus() != OrderStatus.INACTIVE) && (updateOrderRq.getStopPrice() != 0))
+            throw new InvalidRequestException(Message.CANNOT_SPECIFY_STOP_PRICE_FOR_ACTIVATED_ORDER);
+    }
 }

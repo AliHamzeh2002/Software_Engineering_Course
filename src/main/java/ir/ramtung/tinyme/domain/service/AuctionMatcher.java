@@ -44,7 +44,6 @@ public class AuctionMatcher extends Matcher{
         return openingPrice;
     }
 
-
     @Override
     public MatchResult execute(Order order) {
         if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
