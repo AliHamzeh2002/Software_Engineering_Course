@@ -2,10 +2,6 @@ package ir.ramtung.tinyme.domain.entity;
 
 import lombok.Getter;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-
 @Getter
 public class InactiveOrderBook extends OrderBook{
 
@@ -24,9 +20,9 @@ public class InactiveOrderBook extends OrderBook{
         return !queue.isEmpty() && ((StopLimitOrder)queue.getFirst()).isActive();
     }
 
-    public StopLimitOrder dequeue(Side side) {
-        var queue = getQueue(side);
-        return (StopLimitOrder)queue.pollFirst();
+    @Override
+    public StopLimitOrder removeFirst(Side side) {
+        return (StopLimitOrder) super.removeFirst(side);
     }
 
 }

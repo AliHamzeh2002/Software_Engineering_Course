@@ -75,8 +75,8 @@ public class OrderBook {
         return !getQueue(side).isEmpty();
     }
 
-    public void removeFirst(Side side) {
-        getQueue(side).removeFirst();
+    public Order removeFirst(Side side) {
+        return getQueue(side).pollFirst();
     }
 
     public int totalSellQuantityByShareholder(Shareholder shareholder) {

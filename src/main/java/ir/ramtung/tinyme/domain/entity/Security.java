@@ -71,9 +71,9 @@ public class Security {
 
     public StopLimitOrder getFirstActivatedOrder(){
         if (inactiveOrderBook.isFirstOrderActive(Side.SELL))
-            return inactiveOrderBook.dequeue(Side.SELL);
+            return inactiveOrderBook.removeFirst(Side.SELL);
         if (inactiveOrderBook.isFirstOrderActive(Side.BUY))
-            return inactiveOrderBook.dequeue(Side.BUY);
+            return inactiveOrderBook.removeFirst(Side.BUY);
         return null;
     }
 
