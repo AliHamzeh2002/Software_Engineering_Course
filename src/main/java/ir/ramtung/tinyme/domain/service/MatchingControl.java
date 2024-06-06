@@ -8,12 +8,12 @@ import ir.ramtung.tinyme.domain.entity.Trade;
 import java.util.LinkedList;
 
 public interface MatchingControl {
-    default MatchingOutcome canStartMatching(Order order) { return MatchingOutcome.OK; }
+    default MatchingOutcome canStartMatching(Order order) { return MatchingOutcome.APPROVED; }
     default void matchingStarted(Order order) {}
-    default MatchingOutcome canAcceptMatching(Order order, MatchResult result) { return MatchingOutcome.OK; }
+    default MatchingOutcome canAcceptMatching(Order order, MatchResult result) { return MatchingOutcome.APPROVED; }
     default void matchingAccepted(Order order, MatchResult result) {}
 
-    default MatchingOutcome canTrade(Order newOrder, Trade trade) { return MatchingOutcome.OK; }
+    default MatchingOutcome canTrade(Order newOrder, Trade trade) { return MatchingOutcome.APPROVED; }
     default void tradeAccepted(Order newOrder, Trade trade) {}
 
     default void rollbackTrades(Order newOrder, LinkedList<Trade> trades) {}
