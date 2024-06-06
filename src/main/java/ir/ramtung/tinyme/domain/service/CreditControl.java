@@ -16,7 +16,7 @@ public class CreditControl implements MatchingControl {
     }
 
     @Override
-    public MatchingOutcome canStartExecuting(Order order){
+    public MatchingOutcome canStartExecution(Order order){
         if (order.getSecurity().getMatchingState() == MatchingState.CONTINUOUS)
             return MatchingOutcome.APPROVED;
         if (order.getSide() == Side.SELL)
@@ -33,17 +33,16 @@ public class CreditControl implements MatchingControl {
     }
 
     @Override
-    public void tradeAccepted(Order newOrder, Trade trade) {
+    public void tradeAccepted(Order newOrder, Order matchingOrder, Trade trade) {
+        if (trade.getSecurity().getMatchingState() == MatchingState.AUCTION) {
+            trade.increaseSellersCredit();
+            Order buyOrder = trade.getBuy();
+            buyOrder.getBroker().increaseCreditBy((long) (buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
+            return;
+        }
         if (newOrder.getSide() == Side.BUY)
             trade.decreaseBuyersCredit();
         trade.increaseSellersCredit();
-    }
-
-    @Override
-    public void tradeAccepted(Trade trade) {
-        trade.increaseSellersCredit();
-        Order buyOrder = trade.getBuy();
-        buyOrder.getBroker().increaseCreditBy((long) (buyOrder.getPrice() - trade.getPrice()) * trade.getQuantity());
     }
 
     @Override

@@ -49,13 +49,9 @@ public class AuctionMatcher extends Matcher{
 
     @Override
     public MatchResult execute(Order order) {
-        MatchingOutcome outcome = controls.canStartExecuting(order);
+        MatchingOutcome outcome = controls.canStartExecution(order);
         if (outcome != MatchingOutcome.APPROVED)
             return new MatchResult(outcome, order);
-        if (order.getSide() == Side.SELL &&
-                !order.getShareholder().hasEnoughPositionsOn(order.getSecurity(),
-                        order.getSecurity().getOrderBook().totalSellQuantityByShareholder(order.getShareholder()) + order.getQuantity()))
-            return MatchResult.notEnoughPositions();
         if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
             return MatchResult.stopLimitOrderIsNotAllowed();
         }
@@ -83,9 +79,7 @@ public class AuctionMatcher extends Matcher{
             }
             Trade trade = new Trade(buyOrder.getSecurity(), openingPrice, tradedQuantity, buyOrder, sellOrder);
             trades.add(trade);
-            controls.tradeAccepted(trade);
-            handleOrderQuantityAfterTrade(buyOrder, tradedQuantity, orderBook);
-            handleOrderQuantityAfterTrade(sellOrder, tradedQuantity, orderBook);
+            controls.tradeAccepted(buyOrder, sellOrder, trade);
         }
         if (!trades.isEmpty())
             trades.get(0).getBuy().getSecurity().setLastTradePrice(openingPrice);

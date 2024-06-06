@@ -28,11 +28,8 @@ public class ContinuousMatcher extends Matcher{
                 rollbackTrades(newOrder, trades);
                 return new MatchResult(outcome, newOrder);
             }
-            controls.tradeAccepted(newOrder, trade);
             trades.add(trade);
-
-            handleOrderQuantityAfterTrade(newOrder, trade.getQuantity(), orderBook);
-            handleOrderQuantityAfterTrade(matchingOrder, trade.getQuantity(), orderBook);
+            controls.tradeAccepted(newOrder, matchingOrder, trade);
         }
         if (newOrder.getStatus() == OrderStatus.NEW && !newOrder.hasEnoughExecutions()) {
             rollbackTrades(newOrder, trades);
@@ -51,10 +48,9 @@ public class ContinuousMatcher extends Matcher{
     }
 
     public MatchResult execute(Order order) {
-        if (order.getSide() == Side.SELL &&
-                !order.getShareholder().hasEnoughPositionsOn(order.getSecurity(),
-                        order.getSecurity().getOrderBook().totalSellQuantityByShareholder(order.getShareholder()) + order.getQuantity()))
-            return MatchResult.notEnoughPositions();
+        MatchingOutcome outcome = controls.canStartExecution(order);
+        if (outcome != MatchingOutcome.APPROVED)
+            return new MatchResult(outcome, order);
 
         if (order instanceof StopLimitOrder stopLimitOrder && !stopLimitOrder.isActive()) {
             if (stopLimitOrder.getSide() == Side.BUY) {
@@ -71,7 +67,7 @@ public class ContinuousMatcher extends Matcher{
         if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY)
             return result;
 
-        MatchingOutcome outcome = controls.canAcceptMatching(order, result);
+        outcome = controls.canAcceptMatching(order, result);
         if (outcome != MatchingOutcome.APPROVED) {
             rollbackTrades(order, result.trades());
             return new MatchResult(outcome, order);
@@ -83,10 +79,6 @@ public class ContinuousMatcher extends Matcher{
         controls.matchingAccepted(order, result);
 
         if (!result.trades().isEmpty()) {
-            for (Trade trade : result.trades()) {
-                trade.getBuy().getShareholder().incPosition(trade.getSecurity(), trade.getQuantity());
-                trade.getSell().getShareholder().decPosition(trade.getSecurity(), trade.getQuantity());
-            }
             order.getSecurity().setLastTradePrice(result.trades().getLast().getPrice());
         }
         return result;
