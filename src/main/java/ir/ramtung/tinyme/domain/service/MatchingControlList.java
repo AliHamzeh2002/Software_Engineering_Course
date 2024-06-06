@@ -43,7 +43,15 @@ public class MatchingControlList {
         }
     }
 
-    public MatchingOutcome canTrade(Order newOrder, Trade trade) { return MatchingOutcome.APPROVED; }
+    public MatchingOutcome canTrade(Order newOrder, Trade trade) {
+        for (MatchingControl control : controlList) {
+            MatchingOutcome outcome = control.canTrade(newOrder, trade);
+            if (outcome != MatchingOutcome.APPROVED) {
+                return outcome;
+            }
+        }
+        return MatchingOutcome.APPROVED;
+    }
 
     public void tradeAccepted(Order newOrder, Trade trade) {
         for (MatchingControl control : controlList) {

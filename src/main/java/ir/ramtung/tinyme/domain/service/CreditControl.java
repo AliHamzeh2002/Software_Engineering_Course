@@ -10,7 +10,7 @@ import java.util.LinkedList;
 public class CreditControl implements MatchingControl {
     @Override
     public MatchingOutcome canTrade(Order newOrder, Trade trade) {
-        if ((newOrder.getSide() == Side.SELL) || (newOrder.getSide() == Side.BUY && trade.buyerHasEnoughCredit())) {
+        if ((newOrder.getSide() == Side.SELL) || (trade.buyerHasEnoughCredit())) {
             return MatchingOutcome.APPROVED;
         } else return MatchingOutcome.NOT_ENOUGH_CREDIT;
     }
@@ -30,6 +30,13 @@ public class CreditControl implements MatchingControl {
     public void executionStarted(Order order) {
         if (order.getSide() == Side.BUY && order.getSecurity().getMatchingState() == MatchingState.AUCTION)
             order.getBroker().decreaseCreditBy(order.getValue());
+    }
+
+    @Override
+    public void tradeAccepted(Order newOrder, Trade trade) {
+        if (newOrder.getSide() == Side.BUY)
+            trade.decreaseBuyersCredit();
+        trade.increaseSellersCredit();
     }
 
     @Override
@@ -57,14 +64,4 @@ public class CreditControl implements MatchingControl {
         }
     }
 
-    @Override
-    public void rollbackTrades(Order newOrder, LinkedList<Trade> trades) {
-        if (newOrder.getSide() == Side.BUY) {
-            newOrder.getBroker().increaseCreditBy(trades.stream().mapToLong(Trade::getTradedValue).sum());
-            trades.forEach(trade -> trade.getSell().getBroker().decreaseCreditBy(trade.getTradedValue()));
-        } else {
-            newOrder.getBroker().decreaseCreditBy(trades.stream().mapToLong(Trade::getTradedValue).sum());
-            trades.forEach(trade -> trade.getSell().getBroker().increaseCreditBy(trade.getTradedValue()));
-        }
-    }
 }

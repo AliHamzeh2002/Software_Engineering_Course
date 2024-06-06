@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -8,6 +9,9 @@ import java.util.ListIterator;
 
 @Service
 public class ContinuousMatcher extends Matcher{
+    @Autowired
+    private MatchingControlList controls;
+
     public MatchResult match(Order newOrder) {
         OrderBook orderBook = newOrder.getSecurity().getOrderBook();
         LinkedList<Trade> trades = new LinkedList<>();
@@ -18,15 +22,13 @@ public class ContinuousMatcher extends Matcher{
                 break;
 
             Trade trade = new Trade(newOrder.getSecurity(), matchingOrder.getPrice(), Math.min(newOrder.getQuantity(), matchingOrder.getQuantity()), newOrder, matchingOrder);
-            if (newOrder.getSide() == Side.BUY) {
-                if (trade.buyerHasEnoughCredit())
-                    trade.decreaseBuyersCredit();
-                else {
-                    rollbackTrades(newOrder, trades);
-                    return MatchResult.notEnoughCredit();
-                }
+
+            MatchingOutcome outcome = controls.canTrade(newOrder, trade);
+            if (outcome != MatchingOutcome.APPROVED) {
+                rollbackTrades(newOrder, trades);
+                return new MatchResult(outcome, newOrder);
             }
-            trade.increaseSellersCredit();
+            controls.tradeAccepted(newOrder, trade);
             trades.add(trade);
 
             handleOrderQuantityAfterTrade(newOrder, trade.getQuantity(), orderBook);
@@ -41,7 +43,6 @@ public class ContinuousMatcher extends Matcher{
 
     private void rollbackTrades(Order newOrder, LinkedList<Trade> trades) {
         trades.forEach(trade -> trade.rollback(newOrder.getSide()));
-
         ListIterator<Trade> it = trades.listIterator(trades.size());
         while (it.hasPrevious()) {
             Order currentMatchingOrder = it.previous().getOrder(newOrder.getSide().opposite());
@@ -70,16 +71,17 @@ public class ContinuousMatcher extends Matcher{
         if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY)
             return result;
 
+        MatchingOutcome outcome = controls.canAcceptMatching(order, result);
+        if (outcome != MatchingOutcome.APPROVED) {
+            rollbackTrades(order, result.trades());
+            return new MatchResult(outcome, order);
+        }
+
         if (result.remainder().getQuantity() > 0) {
-            if (order.getSide() == Side.BUY) {
-                if (!order.getBroker().hasEnoughCredit(order.getValue())) {
-                    rollbackTrades(order, result.trades());
-                    return MatchResult.notEnoughCredit();
-                }
-                order.getBroker().decreaseCreditBy(order.getValue());
-            }
             order.getSecurity().getOrderBook().enqueue(result.remainder());
         }
+        controls.matchingAccepted(order, result);
+
         if (!result.trades().isEmpty()) {
             for (Trade trade : result.trades()) {
                 trade.getBuy().getShareholder().incPosition(trade.getSecurity(), trade.getQuantity());
