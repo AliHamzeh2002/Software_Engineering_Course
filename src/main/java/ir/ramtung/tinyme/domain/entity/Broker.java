@@ -5,16 +5,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+@Getter
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
 public class Broker {
-    @Getter
     @EqualsAndHashCode.Include
     private long brokerId;
-    @Getter
     private String name;
-    @Getter
     private long credit;
 
     public void increaseCreditBy(long amount) {
