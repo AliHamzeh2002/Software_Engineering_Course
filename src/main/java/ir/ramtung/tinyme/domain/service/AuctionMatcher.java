@@ -1,6 +1,7 @@
 package ir.ramtung.tinyme.domain.service;
 
 import ir.ramtung.tinyme.domain.entity.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -11,6 +12,8 @@ import java.util.Set;
 public class AuctionMatcher extends Matcher{
 
     public final static int INVALID_OPENING_PRICE = 0;
+    @Autowired
+    private MatchingControlList controls;
 
     public int calculateTradableQuantity(int openingPrice, OrderBook orderBook){
         int tradableQuantityBuy = orderBook.calculateTradableQuantity(Side.BUY, openingPrice);
@@ -46,6 +49,9 @@ public class AuctionMatcher extends Matcher{
 
     @Override
     public MatchResult execute(Order order) {
+        MatchingOutcome outcome = controls.canStartExecuting(order);
+        if (outcome != MatchingOutcome.APPROVED)
+            return new MatchResult(outcome, order);
         if (order.getSide() == Side.SELL &&
                 !order.getShareholder().hasEnoughPositionsOn(order.getSecurity(),
                         order.getSecurity().getOrderBook().totalSellQuantityByShareholder(order.getShareholder()) + order.getQuantity()))
@@ -56,11 +62,7 @@ public class AuctionMatcher extends Matcher{
         if (order.getStatus() == OrderStatus.NEW && order.getMinimumExecutionQuantity() != 0){
             return MatchResult.minimumExecutionQuantityIsNotAllowed();
         }
-        if (order.getSide() == Side.BUY) {
-            if (!order.getBroker().hasEnoughCredit(order.getValue()))
-                return MatchResult.notEnoughCredit();
-            order.getBroker().decreaseCreditBy(order.getValue());
-        }
+        controls.executionStarted(order);
         order.getSecurity().getOrderBook().enqueue(order);
         int openingPrice = calculateOpeningPrice(order.getSecurity().getOrderBook(), order.getSecurity().getLastTradePrice());
         int tradableQuantity = calculateTradableQuantity(openingPrice, order.getSecurity().getOrderBook());
@@ -80,9 +82,8 @@ public class AuctionMatcher extends Matcher{
                 break;
             }
             Trade trade = new Trade(buyOrder.getSecurity(), openingPrice, tradedQuantity, buyOrder, sellOrder);
-            trade.increaseSellersCredit();
             trades.add(trade);
-            buyOrder.getBroker().increaseCreditBy((long) (buyOrder.getPrice() - openingPrice) * tradedQuantity);
+            controls.tradeAccepted(trade);
             handleOrderQuantityAfterTrade(buyOrder, tradedQuantity, orderBook);
             handleOrderQuantityAfterTrade(sellOrder, tradedQuantity, orderBook);
         }

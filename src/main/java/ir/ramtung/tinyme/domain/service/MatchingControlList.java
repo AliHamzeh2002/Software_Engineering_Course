@@ -15,17 +15,17 @@ public class MatchingControlList {
     @Autowired
     private List<MatchingControl> controlList;
 
-    public MatchingOutcome canStartMatching(Order order) {
+    public MatchingOutcome canStartExecuting(Order order) {
         for (MatchingControl control : controlList) {
-            MatchingOutcome outcome = control.canStartMatching(order);
+            MatchingOutcome outcome = control.canStartExecuting(order);
             if (outcome != MatchingOutcome.APPROVED)
                 return outcome;
         }
         return MatchingOutcome.APPROVED;
     }
-    public void matchingStarted(Order order) {
+    public void executionStarted(Order order) {
         for (MatchingControl control : controlList) {
-            control.matchingStarted(order);
+            control.executionStarted(order);
         }
     }
     public MatchingOutcome canAcceptMatching(Order order, MatchResult result) {
@@ -48,6 +48,12 @@ public class MatchingControlList {
     public void tradeAccepted(Order newOrder, Trade trade) {
         for (MatchingControl control : controlList) {
             control.tradeAccepted(newOrder, trade);
+        }
+    }
+
+    public void tradeAccepted(Trade trade) {
+        for (MatchingControl control : controlList) {
+            control.tradeAccepted(trade);
         }
     }
 

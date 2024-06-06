@@ -57,6 +57,10 @@ public final class MatchResult {
         this.trades = trades;
     }
 
+    public MatchResult(MatchingOutcome outcome, Order remainder) {
+        this(outcome, remainder, new LinkedList<>());
+    }
+
     private MatchResult(MatchingOutcome outcome, Order remainder, LinkedList<Trade> trades, int openingPrice, int tradableQuantity) {
         this.outcome = outcome;
         this.remainder = remainder;

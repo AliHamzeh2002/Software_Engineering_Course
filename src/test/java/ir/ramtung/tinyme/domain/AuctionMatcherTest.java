@@ -3,6 +3,7 @@ package ir.ramtung.tinyme.domain;
 import ir.ramtung.tinyme.config.MockedJMSTestConfig;
 import ir.ramtung.tinyme.domain.entity.*;
 import ir.ramtung.tinyme.domain.service.AuctionMatcher;
+import ir.ramtung.tinyme.messaging.request.MatchingState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ public class AuctionMatcherTest {
     @BeforeEach
     void setupOrderBook() {
         security = Security.builder().build();
+        security.setMatchingState(MatchingState.AUCTION);
         broker1 = Broker.builder().credit(100_000_000L).build();
         broker2 = Broker.builder().credit(100_000_000L).build();
         shareholder = Shareholder.builder().build();
