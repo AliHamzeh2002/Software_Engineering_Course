@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +32,8 @@ public class OrderHandler {
 
     HashMap<Long, Long> orderIdToRequestId;
 
+    Map<MatchingOutcome, String> errorMessages;
+
     public OrderHandler(SecurityRepository securityRepository, BrokerRepository brokerRepository, ShareholderRepository shareholderRepository, EventPublisher eventPublisher, ContinuousMatcher continuousMatcher, AuctionMatcher auctionMatcher) {
         this.securityRepository = securityRepository;
         this.brokerRepository = brokerRepository;
@@ -39,6 +42,13 @@ public class OrderHandler {
         this.continuousMatcher = continuousMatcher;
         this.auctionMatcher = auctionMatcher;
         this.orderIdToRequestId = new HashMap<>();
+        this.errorMessages = Map.ofEntries(
+                Map.entry(MatchingOutcome.NOT_ENOUGH_CREDIT, Message.BUYER_HAS_NOT_ENOUGH_CREDIT),
+                Map.entry(MatchingOutcome.NOT_ENOUGH_POSITIONS, Message.SELLER_HAS_NOT_ENOUGH_POSITIONS),
+                Map.entry(MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY, Message.HAS_NOT_ENOUGH_EXECUTION_QUANTITY),
+                Map.entry(MatchingOutcome.STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE, Message.STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE),
+                Map.entry(MatchingOutcome.MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE, Message.MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE)
+        );
     }
 
     public void handleEnterOrder(EnterOrderRq enterOrderRq) {
@@ -56,26 +66,8 @@ public class OrderHandler {
             else
                 matchResult = security.updateOrder(enterOrderRq, getSecurityMatcher(security));
 
-            if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT) {
-                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.BUYER_HAS_NOT_ENOUGH_CREDIT)));
-                return;
-            }
-            if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_POSITIONS) {
-                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.SELLER_HAS_NOT_ENOUGH_POSITIONS)));
-                return;
-            }
-            if (matchResult.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY) {
-                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.HAS_NOT_ENOUGH_EXECUTION_QUANTITY)));
-                return;
-            }
-
-            if (matchResult.outcome() == MatchingOutcome.STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE) {
-                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.STOP_LIMIT_ORDER_IS_NOT_ALLOWED_IN_AUCTION_STATE)));
-                return;
-            }
-
-            if (matchResult.outcome() == MatchingOutcome.MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE) {
-                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(Message.MINIMUM_EXECUTION_QUANTITY_IS_NOT_ALLOWED_IN_AUCTION_STATE)));
+            if (errorMessages.containsKey(matchResult.outcome())){
+                eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), List.of(errorMessages.get(matchResult.outcome()))));
                 return;
             }
 
