@@ -163,7 +163,7 @@ public class ContinuousMatcherTest {
     @Test
     void new_sell_order_does_not_satisfy_minimum_execution_quantity(){
         Order order = new Order(11, security, Side.SELL, 600, 15480, broker, shareholder, 500);
-        MatchResult result = matcher.match(order);
+        MatchResult result = matcher.execute(order);
         assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY);
         assertThat(order.getExecutionQuantity()).isEqualTo(347);
     }
@@ -178,16 +178,16 @@ public class ContinuousMatcherTest {
 
     @Test
     void new_buy_order_does_not_satisfy_minimum_execution_quantity(){
-        Order order = new Order(11, security, Side.BUY, 100000, 15810, broker, shareholder, 8000);
-        MatchResult result = matcher.match(order);
+        Order order = new Order(11, security, Side.BUY, 350 + 800 + 285 + 10, 15810, broker, shareholder, 8000);
+        MatchResult result = matcher.execute(order);
         assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY);
         assertThat(order.getExecutionQuantity()).isEqualTo(350 + 800 + 285);
     }
 
     @Test
     void new_iceberg_order_does_not_satisfy_minimum_execution_quantity(){
-        IcebergOrder icebergOrder = new IcebergOrder(11, security, Side.BUY, 100000, 15810, broker, shareholder, 200, 8000);
-        MatchResult result = matcher.match(icebergOrder);
+        IcebergOrder icebergOrder = new IcebergOrder(11, security, Side.BUY, 350 + 800 + 285 + 10, 15810, broker, shareholder, 200, 8000);
+        MatchResult result = matcher.execute(icebergOrder);
         assertThat(result.outcome()).isEqualTo(MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY);
         assertThat(icebergOrder.getExecutionQuantity()).isEqualTo(350 + 800 + 285);
     }
@@ -203,7 +203,7 @@ public class ContinuousMatcherTest {
     @Test
     void sell_order_rollsback_after_minimum_execution_quantity_not_satisfied(){
         Order order = new Order(11, security, Side.SELL, 600, 15480, broker, shareholder, 500);
-        MatchResult result = matcher.match(order);
+        MatchResult result = matcher.execute(order);
         assertThat(security.getOrderBook().getBuyQueue().getFirst().getOrderId()).isEqualTo(1);
         assertThat(security.getOrderBook().getBuyQueue().getFirst().getQuantity()).isEqualTo(304);
         assertThat(security.getOrderBook().getBuyQueue().stream().count()).isEqualTo(5);
@@ -215,7 +215,7 @@ public class ContinuousMatcherTest {
     void buy_order_rollsback_after_minimum_execution_quantity_not_satisfied(){
         Order order = new Order(11, security, Side.BUY, 100000, 15810, broker, shareholder, 8000);
         LinkedList<Order> initialOrders = security.getOrderBook().getSellQueue();
-        MatchResult result = matcher.match(order);
+        MatchResult result = matcher.execute(order);
         for (int i = 0; i < 3; i++) {
             assertThat(security.getOrderBook().getSellQueue().get(i).getOrderId()).isEqualTo(initialOrders.get(i).getOrderId());
             assertThat(security.getOrderBook().getSellQueue().get(i).getQuantity()).isEqualTo(initialOrders.get(i).getQuantity());

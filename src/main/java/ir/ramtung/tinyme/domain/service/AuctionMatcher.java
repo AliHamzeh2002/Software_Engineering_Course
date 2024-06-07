@@ -55,9 +55,6 @@ public class AuctionMatcher extends Matcher{
         if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
             return MatchResult.stopLimitOrderIsNotAllowed();
         }
-        if (order.getStatus() == OrderStatus.NEW && order.getMinimumExecutionQuantity() != 0){
-            return MatchResult.minimumExecutionQuantityIsNotAllowed();
-        }
         controls.executionStarted(order);
         order.getSecurity().getOrderBook().enqueue(order);
         int openingPrice = calculateOpeningPrice(order.getSecurity().getOrderBook(), order.getSecurity().getLastTradePrice());

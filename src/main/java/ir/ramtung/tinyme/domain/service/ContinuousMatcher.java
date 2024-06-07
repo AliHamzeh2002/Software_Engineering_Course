@@ -31,10 +31,6 @@ public class ContinuousMatcher extends Matcher{
             trades.add(trade);
             controls.tradeAccepted(newOrder, matchingOrder, trade);
         }
-        if (newOrder.getStatus() == OrderStatus.NEW && !newOrder.hasEnoughExecutions()) {
-            rollbackTrades(newOrder, trades);
-            return MatchResult.notEnoughMatches();
-        }
         return MatchResult.executed(newOrder, trades);
     }
 
@@ -64,7 +60,7 @@ public class ContinuousMatcher extends Matcher{
 
         MatchResult result = match(order);
 
-        if (result.outcome() == MatchingOutcome.NOT_ENOUGH_CREDIT || result.outcome() == MatchingOutcome.NOT_ENOUGH_EXECUTION_QUANTITY)
+        if (result.outcome() != MatchingOutcome.EXECUTED)
             return result;
 
         outcome = controls.canAcceptMatching(order, result);
