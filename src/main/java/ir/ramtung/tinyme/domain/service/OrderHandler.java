@@ -56,7 +56,6 @@ public class OrderHandler {
             validateEnterOrderRq(enterOrderRq);
 
             Security security = securityRepository.findSecurityByIsin(enterOrderRq.getSecurityIsin());
-
             Broker broker = brokerRepository.findBrokerById(enterOrderRq.getBrokerId());
             Shareholder shareholder = shareholderRepository.findShareholderById(enterOrderRq.getShareholderId());
 
@@ -71,28 +70,21 @@ public class OrderHandler {
                 return;
             }
 
-            if (matchResult.outcome() == MatchingOutcome.EXECUTED && enterOrderRq.getStopPrice()!=0){
+            if (matchResult.outcome() == MatchingOutcome.EXECUTED && enterOrderRq.getStopPrice()!=0)
                 eventPublisher.publish(new OrderActivatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-            }
 
-            if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER){
+            if (enterOrderRq.getRequestType() == OrderEntryType.NEW_ORDER)
                 eventPublisher.publish(new OrderAcceptedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-                orderIdToRequestId.put(enterOrderRq.getOrderId(), enterOrderRq.getRequestId());
-            }
-
-            else {
+            else
                 eventPublisher.publish(new OrderUpdatedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId()));
-                orderIdToRequestId.put(enterOrderRq.getOrderId(), enterOrderRq.getRequestId());
-            }
-            if (!matchResult.trades().isEmpty()) {
+            orderIdToRequestId.put(enterOrderRq.getOrderId(), enterOrderRq.getRequestId());
+
+            if (!matchResult.trades().isEmpty())
                 eventPublisher.publish(new OrderExecutedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), matchResult.trades().stream().map(TradeDTO::new).collect(Collectors.toList())));
-            }
-            if (security.getMatchingState() == MatchingState.AUCTION){
+            if (security.getMatchingState() == MatchingState.AUCTION)
                 eventPublisher.publish(new OpeningPriceEvent(security.getIsin(), matchResult.openingPrice(), matchResult.tradableQuantity()));
-            }
-            if (security.getLastTradePrice() != Security.EMPTY_TRADE_PRICE){
+            if (security.getLastTradePrice() != Security.EMPTY_TRADE_PRICE)
                 handleActivations(security);
-            }
 
         } catch (InvalidRequestException ex) {
             eventPublisher.publish(new OrderRejectedEvent(enterOrderRq.getRequestId(), enterOrderRq.getOrderId(), ex.getReasons()));
