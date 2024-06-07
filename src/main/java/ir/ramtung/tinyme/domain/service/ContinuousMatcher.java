@@ -51,24 +51,17 @@ public class ContinuousMatcher extends Matcher{
         controls.executionStarted(order);
 
         MatchResult result = match(order);
-
-        if (result.outcome() != MatchingOutcome.EXECUTED)
-            return result;
-
         outcome = controls.canAcceptMatching(order, result);
         if (outcome != MatchingOutcome.APPROVED) {
             rollbackTrades(order, result.trades());
             return new MatchResult(outcome, order);
         }
-
-        if (result.remainder().getQuantity() > 0) {
+        if (result.remainder().getQuantity() > 0)
             order.getSecurity().getOrderBook().enqueue(result.remainder());
-        }
-        controls.matchingAccepted(order, result);
 
-        if (!result.trades().isEmpty()) {
+        controls.matchingAccepted(order, result);
+        if (!result.trades().isEmpty())
             order.getSecurity().setLastTradePrice(result.trades().getLast().getPrice());
-        }
         return result;
     }
 

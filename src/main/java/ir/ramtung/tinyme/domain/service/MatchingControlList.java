@@ -29,6 +29,8 @@ public class MatchingControlList {
         }
     }
     public MatchingOutcome canAcceptMatching(Order order, MatchResult result) {
+        if (result.outcome() != MatchingOutcome.EXECUTED)
+            return result.outcome();
         for (MatchingControl control : controlList) {
             MatchingOutcome outcome = control.canAcceptMatching(order, result);
             if (outcome != MatchingOutcome.APPROVED) {
