@@ -52,9 +52,9 @@ public class AuctionMatcher extends Matcher{
         MatchingOutcome outcome = controls.canStartExecution(order);
         if (outcome != MatchingOutcome.APPROVED)
             return new MatchResult(outcome, order);
-        if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
-            return MatchResult.stopLimitOrderIsNotAllowed();
-        }
+//        if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
+//            return MatchResult.stopLimitOrderIsNotAllowed();
+//        }
         controls.executionStarted(order);
         order.getSecurity().getOrderBook().enqueue(order);
         int openingPrice = calculateOpeningPrice(order.getSecurity().getOrderBook(), order.getSecurity().getLastTradePrice());

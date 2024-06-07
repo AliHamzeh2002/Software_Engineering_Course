@@ -48,15 +48,7 @@ public class ContinuousMatcher extends Matcher{
         if (outcome != MatchingOutcome.APPROVED)
             return new MatchResult(outcome, order);
 
-        if (order instanceof StopLimitOrder stopLimitOrder && !stopLimitOrder.isActive()) {
-            if (stopLimitOrder.getSide() == Side.BUY) {
-                if (!stopLimitOrder.getBroker().hasEnoughCredit(stopLimitOrder.getValue()))
-                    return MatchResult.notEnoughCredit();
-                stopLimitOrder.getBroker().decreaseCreditBy(stopLimitOrder.getValue());
-            }
-            stopLimitOrder.getSecurity().getInactiveOrderBook().enqueue(stopLimitOrder);
-            return MatchResult.isInActive();
-        }
+        controls.executionStarted(order);
 
         MatchResult result = match(order);
 
