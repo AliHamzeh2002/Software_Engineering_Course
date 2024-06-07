@@ -52,9 +52,6 @@ public class AuctionMatcher extends Matcher{
         MatchingOutcome outcome = controls.canStartExecution(order);
         if (outcome != MatchingOutcome.APPROVED)
             return new MatchResult(outcome, order);
-//        if (order instanceof StopLimitOrder && ((order.getStatus() == OrderStatus.NEW || order.getStatus() == OrderStatus.INACTIVE))){
-//            return MatchResult.stopLimitOrderIsNotAllowed();
-//        }
         controls.executionStarted(order);
         order.getSecurity().getOrderBook().enqueue(order);
         int openingPrice = calculateOpeningPrice(order.getSecurity().getOrderBook(), order.getSecurity().getLastTradePrice());
@@ -64,12 +61,10 @@ public class AuctionMatcher extends Matcher{
 
     public MatchResult reopen(OrderBook orderBook,int lastTradePrice) {
         int openingPrice = calculateOpeningPrice(orderBook, lastTradePrice);
-        LinkedList<Order> buyQueue = orderBook.getBuyQueue();
-        LinkedList<Order> sellQueue = orderBook.getSellQueue();
         LinkedList<Trade> trades = new LinkedList<>();
         while (orderBook.hasOrderOfType(Side.BUY) && orderBook.hasOrderOfType(Side.SELL)) {
-            Order buyOrder = buyQueue.getFirst();
-            Order sellOrder = sellQueue.getFirst();
+            Order buyOrder = orderBook.getFirst(Side.BUY);
+            Order sellOrder = orderBook.getFirst(Side.SELL);
             int tradedQuantity = Math.min(buyOrder.getQuantity(), sellOrder.getQuantity());
             if (!buyOrder.matches(openingPrice) || !sellOrder.matches(openingPrice)) {
                 break;
