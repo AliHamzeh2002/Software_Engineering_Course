@@ -9,7 +9,7 @@ import java.util.Set;
 
 
 @Service
-public class AuctionMatcher extends Matcher{
+public class AuctionMatcher implements Matcher{
 
     public final static int INVALID_OPENING_PRICE = 0;
     @Autowired

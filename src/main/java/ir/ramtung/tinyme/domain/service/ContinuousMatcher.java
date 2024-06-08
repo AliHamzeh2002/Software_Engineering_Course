@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 @Service
-public class ContinuousMatcher extends Matcher{
+public class ContinuousMatcher implements Matcher{
     @Autowired
     private MatchingControlList controls;
 

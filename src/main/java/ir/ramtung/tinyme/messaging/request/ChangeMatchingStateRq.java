@@ -19,7 +19,7 @@ public class ChangeMatchingStateRq {
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime entryTime;
 
-    public ChangeMatchingStateRq( String securityIsin, MatchingState targetState) {
+    public ChangeMatchingStateRq(String securityIsin, MatchingState targetState) {
         this.securityIsin = securityIsin;
         this.targetState = targetState;
         this.entryTime = LocalDateTime.now();
